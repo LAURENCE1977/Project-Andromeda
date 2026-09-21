@@ -1,0 +1,12 @@
+.env
+.env.local
+*.key
+*.secret
+config.local.json
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log
+cache/
+tmp/
