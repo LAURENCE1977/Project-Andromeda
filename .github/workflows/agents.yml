@@ -1,13 +1,13 @@
 name: Agents
 on:
   push:
-    branches: [feature/agents]
+    branches: [main]
   workflow_dispatch:
 
 jobs:
   setup:
-    runs-on: ubuntu-latestatest
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Show ready
-        run: echo "✅ Agents workflow active"
+      - name: Ready
+        run: echo "✅ Agents active"
