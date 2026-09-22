@@ -2,29 +2,119 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Andromeda — Voice Core</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Project Andromeda</title>
   <style>
-    *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,-apple-system,sans-serif}
-    body{background:#050510;color:#eef;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem}
-    h1{font-size:1.4rem;color:#9cf;margin-bottom:.5rem}
-    .status{color:#89a;margin-bottom:2rem;text-align:center}
-    .tap{padding:1.5rem 3rem;font-size:1.3rem;border-radius:1.5rem;border:none;background:linear-gradient(145deg,#25b,#36c);color:#fff;cursor:pointer}
-    .tap.hid{display:none}
-    .dot{width:24px;height:24px;border-radius:50%;background:#334;margin-bottom:1rem;transition:all .3s}
-    .dot.listen{background:#2c5;box-shadow:0 0 20px #2c5}
-    .dot.awake{background:#f82;box-shadow:0 0 25px #f82;animation:pulse 1s infinite}
-    @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(255,136,34,.5)}100%{box-shadow:0 0 0 15px rgba(255,136,34,0)}}
-    .heard{max-width:500px;text-align:center;color:#bcd;margin-top:2rem;min-height:4rem;font-size:1.1rem}
+    *{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,-apple-system,sans-serif}
+    body{background:#0b0c10;color:#e6e6e6;min-height:100vh;display:flex;flex-direction:column}
+    header{padding:1.2rem;background:#1f2833;border-bottom:1px solid #45a29e}
+    h1{font-size:1.4rem;color:#66fcf1}
+    .chat-container{flex:1;max-width:900px;width:95%;margin:1.5rem auto;display:flex;flex-direction:column;gap:1rem}
+    .messages{flex:1;min-height:400px;max-height:60vh;overflow-y:auto;padding:1rem;background:#1f2833;border-radius:12px;border:1px solid #45a29e;display:flex;flex-direction:column;gap:0.8rem}
+    .msg{padding:0.8rem 1rem;border-radius:10px;max-width:85%}
+    .user{background:#45a29e;color:#0b0c10;align-self:flex-end}
+    .ai{background:#2c3543;color:#e6e6e6;align-self:flex-start}
+    .input-bar{display:flex;gap:0.6rem;margin-top:0.5rem}
+    input{flex:1;padding:0.9rem 1rem;border-radius:8px;border:1px solid #45a29e;background:#1f2833;color:#fff;font-size:1rem}
+    button{padding:0.9rem 1.4rem;border-radius:8px;border:none;background:#66fcf1;color:#0b0c10;font-weight:600;cursor:pointer}
+    button:disabled{opacity:0.5;cursor:not-allowed}
+    .provider-tabs{display:flex;gap:0.5rem;margin-bottom:0.8rem}
+    .tab{padding:0.5rem 1rem;border-radius:6px;border:1px solid #45a29e;background:transparent;color:#fff;cursor:pointer}
+    .tab.active{background:#45a29e;color:#0b0c10}
+    .status{font-size:0.8rem;color:#999;margin-top:0.3rem}
   </style>
 </head>
 <body>
-  <h1>Andromeda — Voice Core</h1>
-  <p class="status" id="s">Tap once → fully hands-free</p>
-  <div class="dot" id="d"></div>
-  <button class="tap" id="b">Enable Voice</button>
-  <p class="heard" id="t"></p>
+  <header><h1>🚀 Project Andromeda</h1></header>
+  <div class="chat-container">
+    <div class="provider-tabs">
+      <button class="tab active" data-provider="openrouter">OpenRouter</button>
+      <button class="tab" data-provider="deepseek">DeepSeek</button>
+    </div>
+    <div class="messages" id="messages">
+      <div class="msg ai">Hi! I'm Andromeda. Choose a provider above, ask me anything ✨</div>
+    </div>
+    <div class="input-bar">
+      <input type="text" id="userInput" placeholder="Type your message...">
+      <button id="sendBtn">Send</button>
+    </div>
+    <div class="status" id="status">Ready</div>
+  </div>
 
-  <script src="voice-engine.js"></script>
+  <script>
+    let activeProvider = 'openrouter';
+
+    // Tab switching
+    document.querySelectorAll('.tab').forEach(tab=>{
+      tab.addEventListener('click',()=>{
+        document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+        tab.classList.add('active');
+        activeProvider = tab.dataset.provider;
+        document.getElementById('status').textContent = `Using: ${activeProvider}`;
+      });
+    });
+
+    async function sendMessage(text){
+      addMsg(text,'user');
+      const status = document.getElementById('status');
+      const sendBtn = document.getElementById('sendBtn');
+      status.textContent = 'Thinking...';
+      sendBtn.disabled = true;
+
+      try{
+        let reply = '';
+        if(activeProvider==='openrouter'){
+          reply = await callOpenRouter(text);
+        }else{
+          reply = await callDeepSeek(text);
+        }
+        addMsg(reply,'ai');
+        status.textContent = 'Done';
+      }catch(err){
+        addMsg(`Error: ${err.message}`,'ai');
+        status.textContent = 'Failed';
+      }
+      sendBtn.disabled = false;
+    }
+
+    async function callOpenRouter(prompt){
+      const res = await fetch('/.netlify/functions/openrouter',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({prompt})
+      });
+      if(!res.ok) throw new Error('OpenRouter connection failed');
+      const d = await res.json();
+      return d.reply || 'No response';
+    }
+
+    async function callDeepSeek(prompt){
+      const res = await fetch('/.netlify/functions/deepseek',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({prompt})
+      });
+      if(!res.ok) throw new Error('DeepSeek connection failed');
+      const d = await res.json();
+      return d.reply || 'No response';
+    }
+
+    function addMsg(text,who){
+      const div = document.createElement('div');
+      div.className = `msg ${who}`;
+      div.textContent = text;
+      document.getElementById('messages').appendChild(div);
+      document.getElementById('messages').scrollTop=99999;
+    }
+
+    // Send button + Enter
+    const sendBtn = document.getElementById('sendBtn');
+    const input = document.getElementById('userInput');
+    sendBtn.addEventListener('click',()=>{
+      const t = input.value.trim();
+      if(t){sendMessage(t);input.value=''}
+    });
+    input.addEventListener('keydown',e=>{if(e.key==='Enter')sendBtn.click()});
+  </script>
 </body>
 </html>
