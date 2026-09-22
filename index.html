@@ -3,65 +3,149 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Project Andromeda</title>
+<title>Project Andromeda ✨</title>
 <style>
-*{box-sizing:border-box;font-family:system-ui,sans-serif}
-body{background:#0f172a;color:#fff;max-width:600px;margin:0 auto;padding:20px}
-h1{text-align:center}
-.box{background:#1e293b;padding:20px;border-radius:12px;margin:15px 0}
-input,button{width:100%;padding:14px;border:none;border-radius:8px;font-size:16px;margin:6px 0}
-button{background:linear-gradient(90deg,#3b82f6,#8b5cf6);color:#fff;font-weight:bold}
-.msg{padding:10px 14px;border-radius:18px;margin:8px 0;max-width:80%}
-.ai{background:#3b82f6;margin-right:auto}
-.you{background:#8b5cf6;margin-left:auto}
-.hidden{display:none}
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',-apple-system,sans-serif}
+body{
+  min-height:100vh;
+  background:linear-gradient(135deg,#0f172a 0%,#1e1b4b 50%,#312e81 100%);
+  color:#f8fafc;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  padding:20px;
+}
+.header{text-align:center;margin:30px 0}
+h1{font-size:32px;background:linear-gradient(90deg,#60a5fa,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.sub{color:#94a3b8;margin-top:8px}
+.container{width:100%;max-width:520px}
+.card{
+  background:rgba(255,255,255,0.05);
+  backdrop-filter:blur(12px);
+  border-radius:20px;
+  padding:28px;
+  margin-bottom:20px;
+  border:1px solid rgba(255,255,255,0.08);
+  box-shadow:0 8px 32px rgba(0,0,0,0.2);
+}
+input,button{
+  width:100%;
+  padding:16px 18px;
+  border:none;
+  border-radius:12px;
+  font-size:16px;
+  margin:8px 0;
+}
+input{background:rgba(255,255,255,0.08);color:#fff;border:1px solid rgba(255,255,255,0.12)}
+button{
+  background:linear-gradient(90deg,#3b82f6,#8b5cf6);
+  color:#fff;
+  font-weight:600;
+  cursor:pointer;
+  transition:transform 0.2s;
+}
+button:active{transform:scale(0.97)}
+.msg{
+  padding:14px 18px;
+  border-radius:20px;
+  margin:10px 0;
+  max-width:85%;
+  line-height:1.5;
+}
+.ai{background:rgba(59,130,246,0.2);border-bottom-left-radius:4px}
+.you{background:rgba(139,92,246,0.2);border-bottom-right-radius:4px;margin-left:auto}
+.hidden{display:none !important}
+.status{color:#86efac;margin-top:12px}
+#chatLog{max-height:60vh;overflow-y:auto;padding-right:8px;margin-bottom:10px}
 </style>
 </head>
 <body>
-<h1>⭐ Andromeda</h1>
 
-<div id="keyArea" class="box">
-  <p>Paste your OpenRouter key:</p>
-  <input type="text" id="k" placeholder="sk-or-v1-...">
-  <button onclick="go()">Save & Start</button>
-  <p id="ok" class="hidden" style="color:#4ade80">✅ Ready — go below!</p>
+<div class="header">
+  <h1>⭐ Andromeda</h1>
+  <p class="sub">Your AI companion — open & free</p>
 </div>
 
-<div id="chatArea" class="box hidden">
-  <div id="c"></div>
-  <input type="text" id="m" placeholder="Your message...">
-  <button onclick="send()">Send</button>
+<div class="container">
+  <!-- Key Setup -->
+  <div id="keyCard" class="card">
+    <p style="margin-bottom:12px;color:#cbd5e1">🔑 Paste your OpenRouter key:</p>
+    <input type="text" id="keyInput" placeholder="sk-or-v1-...">
+    <button onclick="saveKey()">✨ Connect & Start</button>
+    <p id="savedMsg" class="status hidden">✅ Saved securely — only on your device</p>
+  </div>
+
+  <!-- Chat Area -->
+  <div id="chatCard" class="card hidden">
+    <div id="chatLog"></div>
+    <input type="text" id="msgInput" placeholder="Type your message...">
+    <button onclick="sendMsg()">Send ✨</button>
+  </div>
 </div>
 
 <script>
 let key = '';
-function go(){
-  key = document.getElementById('k').value.trim();
-  if(!key.startsWith('sk-or-v1-')) return alert('❌ Wrong — must start sk-or-v1-');
-  localStorage.setItem('ak',key);
-  document.getElementById('ok').classList.remove('hidden');
-  setTimeout(()=>{
-    document.getElementById('keyArea').classList.add('hidden');
-    document.getElementById('chatArea').classList.remove('hidden');
-    say("Hi! I'm Andromeda ✨ Let's chat!");
-  },600);
-}
-function say(t){const d=document.createElement('div');d.className='msg ai';d.textContent=t;document.getElementById('c').appendChild(d)}
-function yousay(t){const d=document.createElement('div');d.className='msg you';d.textContent=t;document.getElementById('c').appendChild(d)}
 
-async function send(){
-  const m=document.getElementById('m');
-  const text=m.value.trim();if(!text)return
-  m.value='';yousay(text);
-  try{
-    const r=await fetch('https://openrouter.ai/api/v1/chat/completions',{
-      method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${key}`,'HTTP-Referer':location.href},
-      body:JSON.stringify({model:'openai/gpt-3.5-turbo',messages:[{role:'user',content:text}]})
-    });
-    const j=await r.json();
-    say(j.choices?.[0]?.message?.content || 'No reply');
-  }catch(e){say('Error: '+e.message)}
+function saveKey(){
+  const input = document.getElementById('keyInput');
+  key = input.value.trim();
+  if(!key.startsWith('sk-or-v1-')) return alert('❌ Key must start with sk-or-v1-');
+  localStorage.setItem('andromeda_key', key);
+  document.getElementById('savedMsg').classList.remove('hidden');
+  setTimeout(showChat, 700);
 }
+
+function showChat(){
+  document.getElementById('keyCard').classList.add('hidden');
+  document.getElementById('chatCard').classList.remove('hidden');
+  add("Hi! I'm Andromeda ✨ I'm here and ready. What shall we build today?", 'ai');
+}
+
+function add(text,who){
+  const log = document.getElementById('chatLog');
+  const d = document.createElement('div');
+  d.className = `msg ${who}`;
+  d.textContent = text;
+  log.appendChild(d);
+  log.scrollTop = log.scrollHeight;
+}
+
+async function sendMsg(){
+  const m = document.getElementById('msgInput');
+  const text = m.value.trim();
+  if(!text) return;
+  m.value = '';
+  add(text, 'you');
+
+  try{
+    const res = await fetch('https://openrouter.ai/api/v1/chat/completions',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'Authorization':`Bearer ${key}`,
+        'HTTP-Referer':window.location.href,
+        'X-Title':'Andromeda'
+      },
+      body:JSON.stringify({
+        model:'meta-llama/llama-3.1-8b-instruct:free',
+        messages:[{role:'user',content:text}]
+      })
+    });
+    const data = await res.json();
+    add(data.choices?.[0]?.message?.content || 'Hmm, I missed that — try again?', 'ai');
+  }catch(e){
+    add('Connection issue — check key & try again', 'ai');
+  }
+}
+
+// Auto-load saved key
+window.onload = () => {
+  const saved = localStorage.getItem('andromeda_key');
+  if(saved?.startsWith('sk-or-v1-')){
+    key = saved;
+    showChat();
+  }
+};
 </script>
 </body>
 </html>
