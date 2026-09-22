@@ -1,19 +1,30 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Project Andromeda</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Andromeda — Voice Core</title>
   <style>
-    body { background: #0a0a0f; color: #e6e6f2; font-family: system-ui; text-align: center; padding: 3rem; }
-    h1 { color: #6ee7b7; font-size: 2.5rem; }
-    .status { color: #6ee7b7; background: rgba(110,231,183,0.1); padding: 0.5rem 1.2rem; border-radius: 999px; display: inline-block; margin-top: 1rem; }
+    *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,-apple-system,sans-serif}
+    body{background:#050510;color:#eef;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem}
+    h1{font-size:1.4rem;color:#9cf;margin-bottom:.5rem}
+    .status{color:#89a;margin-bottom:2rem;text-align:center}
+    .tap{padding:1.5rem 3rem;font-size:1.3rem;border-radius:1.5rem;border:none;background:linear-gradient(145deg,#25b,#36c);color:#fff;cursor:pointer}
+    .tap.hid{display:none}
+    .dot{width:24px;height:24px;border-radius:50%;background:#334;margin-bottom:1rem;transition:all .3s}
+    .dot.listen{background:#2c5;box-shadow:0 0 20px #2c5}
+    .dot.awake{background:#f82;box-shadow:0 0 25px #f82;animation:pulse 1s infinite}
+    @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(255,136,34,.5)}100%{box-shadow:0 0 0 15px rgba(255,136,34,0)}}
+    .heard{max-width:500px;text-align:center;color:#bcd;margin-top:2rem;min-height:4rem;font-size:1.1rem}
   </style>
 </head>
 <body>
-  <h1>Project Andromeda</h1>
-  <p>Autonomous • Open Source • Cross-Platform</p>
-  <p>Web-native, self-upgrading, built for everyone.</p>
-  <div class="status">✅ System Online</div>
+  <h1>Andromeda — Voice Core</h1>
+  <p class="status" id="s">Tap once → fully hands-free</p>
+  <div class="dot" id="d"></div>
+  <button class="tap" id="b">Enable Voice</button>
+  <p class="heard" id="t"></p>
+
+  <script src="voice-engine.js"></script>
 </body>
 </html>
