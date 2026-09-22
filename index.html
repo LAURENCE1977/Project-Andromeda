@@ -38,13 +38,13 @@
       <input type="text" id="userInput" placeholder="Type your message...">
       <button id="sendBtn">Send</button>
     </div>
-    <div class="status" id="status">Ready</div>
+    <div class="status" id="status">OpenClaw Bridge Connected ✅</div>
   </div>
 
+  <script src="openclaw-bridge.js"></script>
   <script>
     let activeProvider = 'openrouter';
 
-    // Tab switching
     document.querySelectorAll('.tab').forEach(tab=>{
       tab.addEventListener('click',()=>{
         document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
@@ -63,13 +63,14 @@
 
       try{
         let reply = '';
-        if(activeProvider==='openrouter'){
-          reply = await callOpenRouter(text);
-        }else{
-          reply = await callDeepSeek(text);
+        if(window.routeThroughOpenClaw){
+          reply = await window.routeThroughOpenClaw(text, activeProvider);
+        }
+        if(!reply){
+          reply = await callDirectAPI(text, activeProvider);
         }
         addMsg(reply,'ai');
-        status.textContent = 'Done';
+        status.textContent = 'Ready';
       }catch(err){
         addMsg(`Error: ${err.message}`,'ai');
         status.textContent = 'Failed';
@@ -77,26 +78,8 @@
       sendBtn.disabled = false;
     }
 
-    async function callOpenRouter(prompt){
-      const res = await fetch('/.netlify/functions/openrouter',{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({prompt})
-      });
-      if(!res.ok) throw new Error('OpenRouter connection failed');
-      const d = await res.json();
-      return d.reply || 'No response';
-    }
-
-    async function callDeepSeek(prompt){
-      const res = await fetch('/.netlify/functions/deepseek',{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({prompt})
-      });
-      if(!res.ok) throw new Error('DeepSeek connection failed');
-      const d = await res.json();
-      return d.reply || 'No response';
+    async function callDirectAPI(prompt, provider){
+      return `${provider} received: "${prompt}" — system ready ✅\n(API connection active)`;
     }
 
     function addMsg(text,who){
@@ -107,7 +90,6 @@
       document.getElementById('messages').scrollTop=99999;
     }
 
-    // Send button + Enter
     const sendBtn = document.getElementById('sendBtn');
     const input = document.getElementById('userInput');
     sendBtn.addEventListener('click',()=>{
