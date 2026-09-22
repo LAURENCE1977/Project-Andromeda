@@ -5,255 +5,227 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Project Andromeda</title>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: system-ui, -apple-system, sans-serif;
-    }
-
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
     body {
-      background: url('bg.webp') no-repeat center center fixed;
+      min-height: 100vh;
+      overflow: hidden;
+      background: url('logo-bg.webp') no-repeat center center;
       background-size: cover;
       color: #fff;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 1rem;
-      padding-bottom: 90px;
     }
-
-    /* Logo — Top Centre */
-    .logo {
-      width: 220px;
-      max-width: 65%;
-      margin: 0 auto 0.5rem;
-      display: block;
+    .remy {
+      position: fixed;
+      right: 5%;
+      bottom: 12%;
+      width: 38%;
+      max-width: 280px;
+      height: auto;
+      pointer-events: none;
+      filter: drop-shadow(0 0 18px rgba(68, 170, 255, 0.35));
     }
-
-    /* Status — Small top indicator */
     .status {
-      padding: 0.5rem 1.2rem;
+      position: fixed;
+      top: 1rem;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 0.45rem 1.2rem;
       border-radius: 50px;
       font-size: 0.85rem;
       font-weight: bold;
-      margin-bottom: 1rem;
-      text-align: center;
-      background: rgba(17, 170, 85, 0.65);
-      box-shadow: 0 0 12px #1a5;
+      z-index: 10;
+      background: rgba(0,0,0,0.65);
+      backdrop-filter: blur(12px);
     }
-
-    /* Messages — Small bubbles above input */
+    .status.green { color: #4ade80; border: 1px solid #4ade80; }
+    .status.yellow { color: #facc15; border: 1px solid #facc15; }
     .messages {
-      width: 100%;
-      max-width: 750px;
-      flex: 1;
-      overflow-y: auto;
-      margin-bottom: 0.5rem;
-      padding-right: 0.5rem;
+      position: fixed;
+      left: 1.5rem;
+      bottom: 5.5rem;
+      width: calc(100% - 3rem);
+      max-width: 420px;
       display: flex;
       flex-direction: column;
-      justify-content: flex-end;
+      gap: 0.5rem;
+      z-index: 5;
     }
-
-    .messages::-webkit-scrollbar {
-      width: 3px;
-    }
-
-    .messages::-webkit-scrollbar-thumb {
-      background: #4af;
-      border-radius: 2px;
-    }
-
     .msg {
-      margin: 0.4rem 0;
-      padding: 0.7rem 1rem;
+      padding: 0.75rem 1rem;
       border-radius: 18px;
-      max-width: 75%;
-      line-height: 1.4;
-      font-size: 0.95rem;
+      max-width: 85%;
+      line-height: 1.45;
+      background: rgba(0,0,0,0.75);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(68,170,255,0.35);
     }
-
-    .user {
-      background: rgba(34, 68, 187, 0.85);
+    .msg.user {
       margin-left: auto;
+      background: rgba(34, 68, 187, 0.85);
       border-bottom-right-radius: 6px;
     }
-
-    .andromeda {
-      background: rgba(17, 68, 119, 0.85);
+    .msg.andromeda {
       margin-right: auto;
+      background: rgba(17, 68, 119, 0.85);
       border-bottom-left-radius: 6px;
     }
-
-    /* Bottom Input Bar — Slim, like an address bar */
     .input-bar {
       position: fixed;
       bottom: 1rem;
       left: 50%;
       transform: translateX(-50%);
       width: calc(100% - 2rem);
-      max-width: 750px;
-      background: rgba(0, 0, 0, 0.6);
+      max-width: 760px;
+      background: rgba(0,0,0,0.65);
       border-radius: 50px;
       padding: 0.6rem 0.8rem;
       backdrop-filter: blur(12px);
-      border: 1px solid rgba(68, 170, 255, 0.35);
+      border: 1px solid rgba(68,170,255,0.35);
       display: flex;
       gap: 0.5rem;
       align-items: center;
       z-index: 10;
     }
-
     input {
       flex: 1;
       padding: 0.8rem 1rem;
       border-radius: 25px;
       border: none;
-      background: rgba(255, 255, 255, 0.12);
+      background: rgba(255,255,255,0.12);
       color: #fff;
       font-size: 1rem;
       outline: none;
     }
-
-    input::placeholder {
-      color: rgba(255, 255, 255, 0.55);
-    }
-
+    input::placeholder { color: rgba(255,255,255,0.55); }
     button {
       width: 48px;
       height: 48px;
       border-radius: 50%;
       border: none;
-      background: linear-gradient(135deg, #25b, #4af);
       color: #fff;
       font-size: 1.3rem;
       cursor: pointer;
       transition: transform 0.2s;
       flex-shrink: 0;
     }
-
-    button:active {
-      transform: scale(0.97);
-    }
-
-    .mic-btn {
-      background: linear-gradient(135deg, #1a7, #4af);
-    }
-
-    .mic-btn.listening {
-      background: linear-gradient(135deg, #a22, #f54);
-      animation: pulse 1s infinite;
-    }
-
-    @keyframes pulse {
-      0% {
-        box-shadow: 0 0 0 0 rgba(255, 68, 68, 0.5);
-      }
-      70% {
-        box-shadow: 0 0 0 12px rgba(255, 68, 68, 0);
-      }
-      100% {
-        box-shadow: 0 0 0 0 rgba(255, 68, 68, 0);
-      }
-    }
-
-    .send-btn {
-      background: linear-gradient(135deg, #25b, #4af);
-    }
-
-    /* Small system check button inside bar */
-    .check-btn {
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.15);
-      font-size: 1.1rem;
-    }
-
-    /* Prevent bottom bar overlap */
+    button:active { transform: scale(0.97); }
+    .check-btn { background: rgba(255,255,255,0.15); font-size: 1.1rem; }
+    .mic-btn { background: linear-gradient(135deg, #1a7, #4af); }
+    .send-btn { background: linear-gradient(135deg, #25b, #4af); }
     @media (max-width: 520px) {
-      .input-bar {
-        padding: 0.5rem 0.6rem;
-      }
-
-      input {
-        font-size: 0.95rem;
-      }
-
-      button {
-        width: 44px;
-        height: 44px;
-        font-size: 1.2rem;
-      }
+      .remy { width: 48%; right: 3%; bottom: 11%; }
+      .messages { left: 1rem; bottom: 5.5rem; width: calc(100% - 2rem); }
+      .input-bar { padding: 0.5rem 0.6rem; }
+      input { font-size: 0.95rem; }
+      button { width: 44px; height: 44px; font-size: 1.2rem; }
     }
   </style>
 </head>
 <body>
 
-  <!-- Logo -->
-  <img src="logo-andromeda.webp" alt="Project Andromeda" class="logo">
+  <img src="logo-bg.webp" alt="Project Andromeda" class="logo-bg">
+  <img src="remy.webp" alt="Remy" class="remy">
 
-  <!-- Status -->
-  <div class="status" id="status">🟢 ONLINE — Tap 🎤 to speak</div>
+  <div class="status green" id="status">🟢 ONLINE</div>
 
-  <!-- Messages -->
   <div class="messages" id="messages">
-    <div class="msg andromeda">Welcome. I am Andromeda. Tap the microphone or type to begin. 💙</div>
+    <div class="msg andromeda">Welcome to Project Andromeda. All systems are ready. 💙</div>
   </div>
 
-  <!-- Bottom Input Bar -->
   <div class="input-bar">
     <button class="check-btn" id="checkBtn">🔍</button>
-    <input type="text" id="userInput" placeholder="Type or tap the mic to speak...">
+    <input type="text" id="userInput" placeholder="Type or speak your message...">
     <button class="mic-btn" id="micBtn">🎤</button>
     <button class="send-btn" id="sendBtn">➤</button>
   </div>
 
-  <script src="voice-engine.js"></script>
   <script>
-    const messages = document.getElementById('messages');
+    const messagesDiv = document.getElementById('messages');
     const userInput = document.getElementById('userInput');
     const sendBtn = document.getElementById('sendBtn');
-    const status = document.getElementById('status');
+    const micBtn = document.getElementById('micBtn');
     const checkBtn = document.getElementById('checkBtn');
-
-    function addMessage(text, sender) {
-      const div = document.createElement('div');
-      div.className = `msg ${sender}`;
-      div.textContent = text;
-      messages.appendChild(div);
-      messages.scrollTop = messages.scrollHeight;
-    }
+    const statusDiv = document.getElementById('status');
 
     function setStatus(text, color) {
-      status.className = `status status-${color}`;
-      status.textContent = text;
+      statusDiv.textContent = text;
+      statusDiv.className = `status ${color}`;
     }
 
-    sendBtn.onclick = () => {
+    function addMessage(text, type) {
+      const div = document.createElement('div');
+      div.className = `msg ${type}`;
+      div.textContent = text;
+      messagesDiv.appendChild(div);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+
+    sendBtn.onclick = async () => {
       const text = userInput.value.trim();
       if (!text) return;
+      
       addMessage(text, 'user');
       userInput.value = '';
-      setStatus('🟡 PROCESSING...', 'yellow');
+      setStatus('🟡 CONNECTING...', 'yellow');
+      
+      let reply;
+      if (typeof GodmodeBridge !== 'undefined') {
+        reply = await GodmodeBridge.send(text);
+      } else if (typeof OpenClawBridge !== 'undefined') {
+        reply = await OpenClawBridge.send(text);
+      } else {
+        reply = "All systems initialising — please try again shortly 💙";
+      }
+      
       setTimeout(() => {
-        addMessage("I hear you. Connecting intelligence modules...", 'andromeda');
+        addMessage(reply, 'andromeda');
+        if (typeof AndromedaVoice !== 'undefined' && AndromedaVoice.speak) {
+          AndromedaVoice.speak(reply);
+        }
         setStatus('🟢 ONLINE', 'green');
-      }, 700);
+      }, 600);
     };
 
-    userInput.addEventListener('keypress', e => e.key === 'Enter' && sendBtn.click());
+    userInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter') sendBtn.click();
+    });
 
-    checkBtn.onclick = () => {
-      setStatus('🟡 RUNNING DIAGNOSTICS...', 'yellow');
+    micBtn.onclick = () => {
+      if (typeof AndromedaVoice !== 'undefined' && AndromedaVoice.startListening) {
+        AndromedaVoice.startListening();
+      } else {
+        userInput.placeholder = "Voice loading...";
+        setTimeout(() => {
+          userInput.placeholder = "Type or speak your message...";
+        }, 2000);
+      }
+    };
+
+    checkBtn.onclick = async () => {
+      setStatus('🔍 CHECKING BRIDGES...', 'yellow');
+      let gOk = typeof GodmodeBridge !== 'undefined' && await GodmodeBridge.checkConnection();
+      let cOk = typeof OpenClawBridge !== 'undefined' && await OpenClawBridge.checkConnection();
+      
       setTimeout(() => {
-        addMessage("✅ SYSTEM CHECK COMPLETE", 'andromeda');
-        addMessage("• Background: ✅ Loaded\n• Logo: ✅ Loaded\n• Voice Engine: ✅ Active\n• Interface: ✅ Responsive\n• Status: ALL SYSTEMS NOMINAL 💙", 'andromeda');
-        setStatus('🟢 ALL SYSTEMS GO', 'green');
-      }, 1000);
+        if (gOk && cOk) {
+          setStatus('🟢 ALL BRIDGES ACTIVE', 'green');
+          addMessage("✅ Godmode + OpenClaw — both connected!", 'andromeda');
+        } else if (gOk) {
+          setStatus('🟢 GODMODE ACTIVE', 'green');
+          addMessage("✅ Godmode bridge connected — OpenClaw standby", 'andromeda');
+        } else if (cOk) {
+          setStatus('🟢 OPENCLAW ACTIVE', 'green');
+          addMessage("✅ OpenClaw bridge connected — Godmode syncing", 'andromeda');
+        } else {
+          setStatus('🟡 BRIDGES SYNCING', 'yellow');
+          addMessage("⏳ Bridges are setting up — try again in 1–2 minutes", 'andromeda');
+        }
+      }, 800);
     };
   </script>
+
+  <script src="openclaw-bridge.js"></script>
+  <script src="godmode-bridge.js"></script>
+  <script src="voice-engine.js"></script>
+
 </body>
 </html>
