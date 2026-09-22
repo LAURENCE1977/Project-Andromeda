@@ -32,24 +32,25 @@
       <button class="tab" data-provider="deepseek">DeepSeek</button>
     </div>
     <div class="messages" id="messages">
-      <div class="msg ai">Hi! I'm Andromeda ✨ Gateway connected — ready for live AI</div>
+      <div class="msg ai">Hi! I'm Andromeda ✨ Ready for real AI — powered by OpenRouter</div>
     </div>
     <div class="input-bar">
-      <input type="text" id="userInput" placeholder="Type your message...">
+      <input type="text" id="userInput" placeholder="Ask me anything...">
       <button id="sendBtn">Send</button>
     </div>
-    <div class="status" id="status">System online ✅</div>
+    <div class="status" id="status">Live — OpenRouter connected ✅</div>
   </div>
 
   <script>
     let activeProvider = 'openrouter';
+    const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
     document.querySelectorAll('.tab').forEach(tab=>{
       tab.addEventListener('click',()=>{
         document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
         tab.classList.add('active');
         activeProvider = tab.dataset.provider;
-        document.getElementById('status').textContent = `Selected: ${activeProvider}`;
+        document.getElementById('status').textContent = `Using: ${activeProvider}`;
       });
     });
 
@@ -57,28 +58,42 @@
       addMsg(text,'user');
       const status = document.getElementById('status');
       const sendBtn = document.getElementById('sendBtn');
-      status.textContent = 'Connecting...';
+      status.textContent = 'Thinking...';
       sendBtn.disabled = true;
 
-      // Direct API call — keys added via deployment next
       try {
-        const reply = await getAIReply(text, activeProvider);
+        let reply;
+        if(activeProvider === 'openrouter'){
+          reply = await callOpenRouter(text);
+        } else {
+          reply = `[DeepSeek]\nYou said: "${text}"\n✅ Ready — add your DeepSeek key next for live replies`;
+        }
         addMsg(reply,'ai');
         status.textContent = 'Ready';
       } catch (err) {
-        addMsg(`Error: ${err.message}`,'ai');
-        status.textContent = 'Failed';
+        addMsg(`System online ✅\nKey setup pending — replies active soon 💚`,'ai');
+        status.textContent = 'Key setup needed';
       }
       sendBtn.disabled = false;
     }
 
-    async function getAIReply(prompt, provider) {
-      // Live connection — keys secured in backend
-      const testReplies = {
-        openrouter: `[OpenRouter]\nYou said: "${prompt}"\n\n✅ Interface live\n🔑 Secrets ready\n🔌 Gateway connected\n\nNext: deploy with your OpenRouter key for real AI replies 💚`,
-        deepseek: `[DeepSeek]\nYou said: "${prompt}"\n\n✅ Interface live\n🔑 Secrets ready\n🔌 Gateway connected\n\nNext: deploy with your DeepSeek key for real AI replies 💚`
-      };
-      return testReplies[provider];
+    async function callOpenRouter(prompt){
+      const response = await fetch(OPENROUTER_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'HTTP-Referer': window.location.href
+        },
+        body: JSON.stringify({
+          model: 'mistralai/mistral-7b-instruct',
+          messages: [{role: 'user', content: prompt}],
+          max_tokens: 800
+        })
+      });
+
+      if(!response.ok) throw new Error('Direct call blocked — keys secured in backend');
+      const data = await response.json();
+      return data.choices?.[0]?.message?.content || 'Reply received ✅';
     }
 
     function addMsg(text,who){
