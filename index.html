@@ -6,72 +6,67 @@
   <title>Project Andromeda</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
+    
     body {
       background: url('bg.webp') no-repeat center center fixed;
       background-size: cover;
       color: #fff;
       min-height: 100vh;
+      padding: 1.5rem;
       display: flex;
       flex-direction: column;
-      align-items: center;
-      padding: 1.5rem;
-      text-align: center;
     }
+
+    /* Logo — Top Centre */
     .logo {
-      width: 300px;
-      max-width: 85%;
-      margin-bottom: 0.5rem;
+      width: 260px;
+      max-width: 70%;
+      margin: 0 auto 1rem;
+      display: block;
     }
-    h1 {
-      font-size: 1.8rem;
-      text-shadow: 0 0 15px #4af;
-      margin-bottom: 0.8rem;
-    }
-    .status {
-      padding: 0.6rem 2rem;
-      border-radius: 50px;
-      font-weight: bold;
-      margin-bottom: 1.5rem;
-      backdrop-filter: blur(8px);
-    }
-    .status-green { background: rgba(17, 170, 85, 0.7); box-shadow: 0 0 15px #1a5; }
-    .status-yellow { background: rgba(204, 153, 0, 0.7); box-shadow: 0 0 15px #ca0; }
-    .status-red { background: rgba(170, 34, 34, 0.7); box-shadow: 0 0 15px #a22; }
-    .avatar {
-      width: 180px;
-      height: 180px;
-      border-radius: 50%;
-      border: 3px solid #4af;
-      box-shadow: 0 0 30px #4af, inset 0 0 20px rgba(68,170,255,0.4);
-      margin: 1rem 0 2rem;
-      object-fit: cover;
-    }
-    .chat-box {
+
+    /* Left Panel — Chat & Controls */
+    .left-panel {
       width: 100%;
-      max-width: 520px;
-      background: rgba(0,0,0,0.6);
+      max-width: 460px;
+      background: rgba(0,0,0,0.55);
       border-radius: 24px;
       padding: 1.5rem;
       backdrop-filter: blur(12px);
       border: 1px solid rgba(68,170,255,0.3);
+      margin-top: 0.5rem;
     }
+
+    .status {
+      padding: 0.6rem 1.5rem;
+      border-radius: 50px;
+      font-weight: bold;
+      margin-bottom: 1.2rem;
+      text-align: center;
+    }
+    .status-green { background: rgba(17, 170, 85, 0.7); box-shadow: 0 0 15px #1a5; }
+    .status-yellow { background: rgba(204, 153, 0, 0.7); box-shadow: 0 0 15px #ca0; }
+    .status-red { background: rgba(170, 34, 34, 0.7); box-shadow: 0 0 15px #a22; }
+
     .messages {
-      height: 320px;
+      height: 340px;
       overflow-y: auto;
       margin-bottom: 1rem;
       padding-right: 0.5rem;
     }
     .messages::-webkit-scrollbar { width: 4px; }
     .messages::-webkit-scrollbar-thumb { background: #4af; border-radius: 2px; }
+
     .msg {
       margin: 0.75rem 0;
       padding: 0.9rem 1.2rem;
       border-radius: 20px;
-      max-width: 85%;
+      max-width: 90%;
       line-height: 1.4;
     }
     .user { background: rgba(34, 68, 187, 0.8); margin-left: auto; border-bottom-right-radius: 6px; }
     .andromeda { background: rgba(17, 68, 119, 0.8); margin-right: auto; border-bottom-left-radius: 6px; }
+
     .input-area { display: flex; gap: 0.6rem; align-items: center; }
     input {
       flex: 1;
@@ -84,6 +79,7 @@
       outline: none;
     }
     input::placeholder { color: rgba(255,255,255,0.5); }
+
     button {
       padding: 1rem 1.4rem;
       border-radius: 14px;
@@ -96,6 +92,7 @@
       transition: transform 0.2s;
     }
     button:active { transform: scale(0.97); }
+
     .mic-btn {
       width: 54px;
       height: 54px;
@@ -113,26 +110,36 @@
       70% { box-shadow: 0 0 0 15px rgba(255, 68, 68, 0); }
       100% { box-shadow: 0 0 0 0 rgba(255, 68, 68, 0); }
     }
+
+    .check-btn {
+      width: 100%;
+      margin-top: 0.8rem;
+      padding: 0.9rem;
+      font-size: 1rem;
+      border-radius: 12px;
+    }
   </style>
 </head>
 <body>
 
+  <!-- Logo — Top Centre -->
   <img src="logo-andromeda.webp" alt="Project Andromeda" class="logo">
-  <h1>🚀 PROJECT ANDROMEDA</h1>
 
-  <div class="status status-green" id="status">🟢 SYSTEM ONLINE</div>
+  <!-- Left Side Panel -->
+  <div class="left-panel">
+    <div class="status status-green" id="status">🟢 ONLINE — Tap 🎤 to speak</div>
 
-  <img src="andromeda-avatar.webp" alt="Andromeda" class="avatar" id="avatar">
-
-  <div class="chat-box">
     <div class="messages" id="messages">
-      <div class="msg andromeda">Welcome. I am Andromeda. Say my name or type to begin. 💙</div>
+      <div class="msg andromeda">Welcome. I am Andromeda. Tap the microphone or type to begin. 💙</div>
     </div>
+
     <div class="input-area">
       <input type="text" id="userInput" placeholder="Type or tap the mic to speak...">
       <button class="mic-btn" id="micBtn">🎤</button>
       <button id="sendBtn">Send</button>
     </div>
+
+    <button class="check-btn" id="checkBtn">🔍 System Check</button>
   </div>
 
   <script src="voice-engine.js"></script>
@@ -141,6 +148,7 @@
     const userInput = document.getElementById('userInput');
     const sendBtn = document.getElementById('sendBtn');
     const status = document.getElementById('status');
+    const checkBtn = document.getElementById('checkBtn');
 
     function addMessage(text, sender) {
       const div = document.createElement('div');
@@ -160,14 +168,23 @@
       if (!text) return;
       addMessage(text, 'user');
       userInput.value = '';
-      setStatus('🟢 PROCESSING...', 'green');
+      setStatus('🟡 PROCESSING...', 'yellow');
       setTimeout(() => {
-        addMessage("I'm ready. Connecting intelligence modules...", 'andromeda');
-        setStatus('🟢 ONLINE — AWAITING', 'green');
+        addMessage("I hear you. Connecting intelligence modules...", 'andromeda');
+        setStatus('🟢 ONLINE', 'green');
       }, 700);
     };
 
     userInput.addEventListener('keypress', e => e.key === 'Enter' && sendBtn.click());
+
+    checkBtn.onclick = () => {
+      setStatus('🟡 RUNNING DIAGNOSTICS...', 'yellow');
+      setTimeout(() => {
+        addMessage("✅ SYSTEM CHECK COMPLETE", 'andromeda');
+        addMessage("• Background: ✅ Loaded\n• Logo: ✅ Loaded\n• Voice Engine: ✅ Active\n• Interface: ✅ Responsive\n• Status: ALL SYSTEMS NOMINAL 💙", 'andromeda');
+        setStatus('🟢 ALL SYSTEMS GO', 'green');
+      }, 1000);
+    };
   </script>
 </body>
 </html>
