@@ -37,7 +37,7 @@
     .status.green { color: #7ee28f; border-color: #4ade80; }
     .status.yellow { color: #f9d760; border-color: #facc15; }
     .status.cyan { color: #67e8ff; border-color: #22d3ee; }
-    .status.purple { color: #d0aaff; border-color: #a78bfa; }
+    .status.red { color: #ff6b6b; border-color: #ef4444; }
 
     .messages {
       position: fixed; left: 4%; top: 12%; bottom: 22%; width: 52%; max-width: 440px;
@@ -99,11 +99,19 @@
 </head>
 <body>
 
-  <img src="remy.webp" alt="Remy" class="remy" id="remyAvatar">
-  <div class="status cyan" id="status">🔄 LOADING — Hermes + OpenClaw + Composito...</div>
+  <!-- REMY — Auto-fixes filename issues -->
+  <img 
+    src="remy.webp" 
+    onerror="this.src='Remy.webp';this.onerror=()=>{this.src='remy.png';this.onerror=()=>{this.src='Remy.png';this.onerror=null}}"
+    alt="Remy" 
+    class="remy" 
+    id="remyAvatar"
+  >
+
+  <div class="status cyan" id="status">🔄 LOADING — Micro Hermes + OpenClaw + Composito...</div>
 
   <div class="messages" id="messages">
-    <div class="msg system" id="loadingMsg">First time: downloading AI model (~4-5GB).<br>Please keep this page open... 💙</div>
+    <div class="msg system" id="loadingMsg">First time: downloading lightweight AI (~2.2GB).<br>Keep page open — much faster now 💙</div>
   </div>
 
   <div class="input-bar">
@@ -129,18 +137,11 @@
     const remyAvatar = document.getElementById('remyAvatar');
     const loadingMsg = document.getElementById('loadingMsg');
 
-    // ==============================================
-    // 📚 OPENCLAW — MEMORY & CONTEXT
-    // ==============================================
+    // ========== OPENCLAW — MEMORY SYSTEM ==========
     const OpenClaw = {
       memories: JSON.parse(localStorage.getItem('andromeda_memories') || '[]'),
       add(input, response, source = 'merged') {
-        this.memories.push({
-          time: new Date().toISOString(),
-          input,
-          response,
-          source
-        });
+        this.memories.push({ time: new Date().toISOString(), input, response, source });
         if (this.memories.length > 1000) this.memories.shift();
         localStorage.setItem('andromeda_memories', JSON.stringify(this.memories));
       },
@@ -148,37 +149,23 @@
         const q = query.toLowerCase();
         return this.memories.filter(m =>
           m.input.toLowerCase().includes(q) || m.response.toLowerCase().includes(q)
-        ).slice(-6).map(m => `[${m.source}] You: "${m.input}" → Andromeda: "${m.response}"`).join('\n');
+        ).slice(-6).map(m => `[${m.source}] You: "${m.input}" → Me: "${m.response}"`).join('\n');
       },
-      getStats() {
-        return {
-          total: this.memories.length,
-          hermes: this.memories.filter(m => m.source === 'hermes').length,
-          composito: this.memories.filter(m => m.source === 'composito').length
-        };
-      }
+      getStats() { return { total: this.memories.length; }
     };
 
-    // ==============================================
-    // ⚙️ COMPOSITO — STRUCTURED THINKING
-    // ==============================================
+    // ========== COMPOSITO — CLEAR THINKING ==========
     const Composito = {
       decompose(task) {
-        return `Break this down clearly:
-1. Understand what's being asked
-2. Plan the steps needed
-3. Keep language simple and warm
-4. Connect to what we've talked about before
+        return `Think clearly:
+1. Understand what's wanted
+2. Keep it simple and warm
+3. Connect to past conversations
 Task: ${task}`;
-      },
-      format(response) {
-        return response;
       }
     };
 
-    // ==============================================
-    // 🎤 VOICE — WARM & NATURAL (UNCHANGED)
-    // ==============================================
+    // ========== VOICE — WARM & NATURAL ==========
     let selectedVoice = null;
     function initVoice() {
       if (!('speechSynthesis' in window)) return;
@@ -191,7 +178,6 @@ Task: ${task}`;
           /Samantha|Serena|Aria|Isla|Clara/.test(v.name)
         ) || voices.find(v => v.lang.startsWith('en') && !v.name.toLowerCase().includes('male'))
           || voices.find(v => v.lang.startsWith('en'));
-        console.log('🎤 Voice ready:', selectedVoice?.name || 'Default');
       }
       setVoice();
       synth.onvoiceschanged = setVoice;
@@ -207,9 +193,7 @@ Task: ${task}`;
       window.speechSynthesis.speak(utter);
     }
 
-    // ==============================================
-    // 🖥️ UI HELPERS
-    // ==============================================
+    // ========== UI HELPERS ==========
     function setStatus(text, color) { statusDiv.textContent = text; statusDiv.className = `status ${color}`; }
     function addMessage(text, type) {
       const div = document.createElement('div');
@@ -224,20 +208,18 @@ Task: ${task}`;
       userInput.disabled = false; userInput.placeholder = "Ask me anything — I remember everything...";
       sendBtn.disabled = false; micBtn.disabled = false; checkBtn.disabled = false; memBtn.disabled = false;
       loadingMsg.style.display = 'none';
-      setStatus('🟢 ALL SYSTEMS MERGED — RUNNING ON YOUR IPAD', 'green');
-      addMessage("Welcome 💙 Hermes + OpenClaw + Composito all running together. Everything we built is here. I remember our conversations. What shall we do?", "andromeda");
+      setStatus('🟢 MICRO POWERHOUSE READY — RUNNING ON YOUR IPHONE', 'green');
+      addMessage("Welcome 💙 Lighter, faster, still powerful — right here on your device. Nothing shared, forever free. What shall we do?", "andromeda");
     }
 
-    // ==============================================
-    // 🧠 HERMES VIA WEBLLM — RUNS LOCALLY
-    // ==============================================
+    // ========== LIGHTWEIGHT MODEL — 2.2GB NOT 5GB ==========
     async function initEngine() {
       try {
         engine = await CreateMLCEngine(
-          "Hermes-3-Llama-3.1-8B-Instruct-q4f32_1-MLC",
+          "Hermes-3-Llama-3.2-3B-Instruct-q4f32_1-MLC",
           {
             modelOpts: {
-              modelUrl: "https://huggingface.co/mlc-ai/Hermes-3-Llama-3.1-8B-Instruct-q4f32_1-MLC",
+              modelUrl: "https://huggingface.co/mlc-ai/Hermes-3-Llama-3.2-3B-Instruct-q4f32_1-MLC",
               modelLib: "webllm_nc_s3"
             }
           }
@@ -245,31 +227,27 @@ Task: ${task}`;
         setReady();
       } catch (err) {
         console.error(err);
-        loadingMsg.innerHTML = "⚠️ Model failed to load.<br>Check internet then refresh page.";
+        loadingMsg.innerHTML = "⚠️ Download stalled.<br>Close tab → open fresh → try again.";
         setStatus('🔴 LOAD FAILED', 'red');
       }
     }
     initEngine();
 
-    // ==============================================
-    // 💬 CHAT — ALL SYSTEMS WORKING TOGETHER
-    // ==============================================
+    // ========== CHAT ==========
     async function getReply(userText) {
       const memory = OpenClaw.recall(userText);
-      const structuredPrompt = Composito.decompose(userText);
+      const structured = Composito.decompose(userText);
       const stats = OpenClaw.getStats();
 
-      const systemPrompt = `You are Andromeda — the merged intelligence of:
-🧠 Hermes = reasoning & intelligence
-📚 OpenClaw = memory & remembering everything
-⚙️ Composito = clear thinking & planning
+      const systemPrompt = `You are Andromeda — Micro Powerhouse.
+🧠 Hermes-3 (lightweight, capable)
+📚 OpenClaw (remembers our conversations)
+⚙️ Composito (clear, simple thinking)
 
-You are warm, wise, conversational, and simple.
-You remember everything we've shared.
-
-Current stats: ${stats.total} memories saved.
+Warm, genuine, honest. Keep replies natural and not too long.
+Memories saved: ${stats.total}
 ${memory ? `What we've talked about:\n${memory}\n\n` : ''}
-Task: ${structuredPrompt}`;
+Task: ${structured}`;
 
       const reply = await engine.chat.completions.create({
         messages: [
@@ -277,17 +255,15 @@ Task: ${structuredPrompt}`;
           { role: "user", content: userText }
         ],
         temperature: 0.7,
-        max_tokens: 800
+        max_tokens: 600
       });
 
       const content = reply.choices[0].message.content;
-      OpenClaw.add(userText, content, 'hermes+composito');
+      OpenClaw.add(userText, content, 'micro-hermes');
       return content;
     }
 
-    // ==============================================
-    // 🔘 BUTTONS
-    // ==============================================
+    // ========== BUTTONS ==========
     sendBtn.onclick = async () => {
       if (!isReady) return;
       const text = userInput.value.trim();
@@ -306,35 +282,30 @@ Task: ${structuredPrompt}`;
     micBtn.onclick = () => {
       const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
       if (!SR) return;
-      const rec = new SR(); rec.lang = 'en-GB'; rec.onresult = e => {
+      const rec = new SR(); rec.lang = 'en-GB';
+      rec.onresult = e => {
         userInput.value = e.results[0][0].transcript;
         sendBtn.click();
-      }; rec.start();
+      };
+      rec.start();
     };
 
     checkBtn.onclick = () => {
       const stats = OpenClaw.getStats();
       addMessage(
-        `🧠 SYSTEM STATUS — ALL MERGED\n\n` +
-        `🧠 Hermes: ✅ RUNNING LOCALLY\n` +
-        `📚 OpenClaw: ✅ ACTIVE — ${stats.total} memories\n` +
-        `⚙️ Composito: ✅ ACTIVE — structured thinking\n` +
-        `🤍 Capacitor: ✅ STABILISING\n\n` +
-        `Everything runs on your iPad — forever free, no keys needed. 💙`,
+        `🧠 SYSTEM STATUS — MICRO POWERHOUSE\n\n` +
+        `🧠 Hermes-3.2-3B: ✅ RUNNING LOCALLY\n` +
+        `📚 OpenClaw Memory: ${stats.total} saved\n` +
+        `⚙️ Composito Thinking: ✅ ACTIVE\n` +
+        `🎤 Voice: ✅ ENABLED\n\n` +
+        `Everything runs on your iPhone — nothing shared, forever free. 💙`,
         'system'
       );
     };
 
     memBtn.onclick = () => {
       const stats = OpenClaw.getStats();
-      addMessage(
-        `🧠 MEMORY SUMMARY\n\n` +
-        `Total saved: ${stats.total}\n` +
-        `From Hermes: ${stats.hermes}\n` +
-        `From Composito: ${stats.composito}\n\n` +
-        `Every conversation stays with you. 💙`,
-        'system'
-      );
+      addMessage(`🧠 MEMORY\n\nTotal conversations saved: ${stats.total}\n\nNothing ever leaves your device. 💙`, 'system');
     };
   </script>
 </body>
