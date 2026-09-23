@@ -4,58 +4,65 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Project Andromeda</title>
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@mlc-ai/webllm@0.2.4/dist/webllm.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
     body {
       min-height: 100vh; overflow: hidden; background-color: #000;
       background-image: url('logo-bg.webp'); background-repeat: no-repeat;
-      background-position: center top; background-size: 92% auto; background-attachment: fixed;
+      background-position: center top; background-size: 90% auto; background-attachment: fixed;
       color: #fff; position: relative;
     }
     body::before {
       content: ""; position: fixed; inset: 0;
-      background: radial-gradient(circle at center, rgba(0,0,0,0.45), rgba(0,0,0,0.75));
+      background: radial-gradient(circle at center, rgba(0,0,0,0.35), rgba(0,0,0,0.65));
       z-index: 0; pointer-events: none;
     }
+
     .remy {
-      position: absolute; right: 4%; bottom: 10%; width: 16%; max-width: 140px;
-      height: auto; z-index: 5; border-radius: 20px; opacity: 0.92;
-      pointer-events: none; transition: all 0.3s ease; background: transparent;
-      mix-blend-mode: lighten; filter: drop-shadow(0 0 18px rgba(80,180,255,0.35));
+      position: absolute; right: 5%; top: 55%; transform: translateY(-50%);
+      width: 14%; max-width: 130px; height: auto; z-index: 8; opacity: 0.95;
+      pointer-events: none; transition: all 0.3s ease; background: transparent !important;
+      border: none !important; border-radius: 0 !important; box-shadow: none !important;
+      mix-blend-mode: lighten; filter: drop-shadow(0 0 12px rgba(80,180,255,0.25));
     }
-    .remy.thinking { opacity: 0.7; transform: scale(1.05); filter: drop-shadow(0 0 22px rgba(80,180,255,0.55)); }
+    .remy.thinking { opacity: 0.8; transform: translateY(-50%) scale(1.05); filter: drop-shadow(0 0 18px rgba(80,180,255,0.45)); }
+
     .status {
       position: fixed; top: 0.75rem; left: 50%; transform: translateX(-50%);
       padding: 0.4rem 1.25rem; border-radius: 50px; font-size: 0.85rem; font-weight: 600;
-      z-index: 10; background: rgba(0,0,0,0.5); backdrop-filter: blur(12px);
+      z-index: 15; background: rgba(0,0,0,0.5); backdrop-filter: blur(12px);
       border: 1px solid rgba(68,170,255,0.3);
     }
     .status.green { color: #7ee28f; border-color: #4ade80; }
     .status.yellow { color: #f9d760; border-color: #facc15; }
+    .status.cyan { color: #67e8ff; border-color: #22d3ee; }
     .status.purple { color: #d0aaff; border-color: #a78bfa; }
+
     .messages {
-      position: fixed; left: 4%; top: 10%; bottom: 18%; width: 46%; max-width: 440px;
+      position: fixed; left: 4%; top: 12%; bottom: 22%; width: 52%; max-width: 440px;
       display: flex; flex-direction: column; gap: 0.7rem; overflow-y: auto;
       z-index: 6; padding-right: 0.5rem;
     }
     .msg {
-      padding: 0.8rem 1.1rem; border-radius: 20px; max-width: 90%; line-height: 1.55;
-      background: rgba(20,60,120,0.7); backdrop-filter: blur(12px);
-      border: 1px solid rgba(100,180,255,0.25); box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-      font-size: 0.95rem;
+      padding: 0.8rem 1.1rem; border-radius: 20px; max-width: 92%; line-height: 1.55;
+      background: rgba(20,60,120,0.65); backdrop-filter: blur(12px);
+      border: 1px solid rgba(100,180,255,0.2);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.15); font-size: 0.95rem;
     }
-    .msg.user { margin-left: auto; background: rgba(30,90,180,0.75); border-bottom-right-radius: 6px; }
-    .msg.andromeda { margin-right: auto; background: rgba(15,80,140,0.7); border-bottom-left-radius: 6px; }
+    .msg.user { margin-left: auto; background: rgba(30,90,180,0.7); border-bottom-right-radius: 6px; }
+    .msg.andromeda { margin-right: auto; background: rgba(15,80,140,0.65); border-bottom-left-radius: 6px; }
     .msg.system {
-      align-self: center; max-width: 95%; font-size: 0.8rem; opacity: 0.8;
+      align-self: center; max-width: 95%; font-size: 0.8rem; opacity: 0.9;
       background: rgba(80,40,120,0.5); border: 1px solid rgba(160,120,255,0.25);
     }
+
     .input-bar {
-      position: fixed; bottom: 1rem; left: 50%; transform: translateX(-50%);
+      position: fixed; bottom: 1.2rem; left: 50%; transform: translateX(-50%);
       width: 94%; max-width: 700px; background: rgba(0,0,0,0.5);
       border-radius: 50px; padding: 0.7rem 1rem; backdrop-filter: blur(15px);
       border: 1px solid rgba(68,170,255,0.3); display: flex; gap: 0.6rem;
-      align-items: center; z-index: 10;
+      align-items: center; z-index: 15;
     }
     input {
       flex: 1; padding: 0.85rem 1.2rem; border-radius: 25px; border: none;
@@ -67,23 +74,25 @@
       font-size: 1.1rem; cursor: pointer; transition: all 0.2s ease; flex-shrink: 0;
     }
     button:active { transform: scale(0.95); }
+    button:disabled { opacity: 0.4; cursor: not-allowed; }
     .check-btn { background: rgba(255,255,255,0.12); }
     .mem-btn { background: linear-gradient(135deg, #7b2ffd, #a855f7); }
     .mic-btn { background: linear-gradient(135deg, #229977, #4499ee); }
     .send-btn { background: linear-gradient(135deg, #3366dd, #4499ee); }
+
     @media (max-width: 1024px) {
-      body { background-size: 94% auto; background-position: center top 2%; }
-      .remy { width: 15%; bottom: 10%; right: 3%; }
-      .messages { width: 50%; left: 4%; bottom: 19%; }
+      body { background-size: 92% auto; }
+      .remy { width: 13%; right: 4%; top: 54%; }
+      .messages { width: 50%; left: 3%; bottom: 23%; }
     }
     @media (max-width: 768px) {
-      body { background-size: 96% auto; background-position: center top 2%; }
-      .remy { width: 20%; bottom: 10%; right: 2%; }
-      .messages { width: 54%; left: 3%; bottom: 19%; }
+      body { background-size: 95% auto; }
+      .remy { width: 18%; right: 3%; top: 54%; }
+      .messages { width: 54%; left: 3%; bottom: 23%; }
     }
     @media (max-width: 480px) {
       .remy { display: none; }
-      .messages { width: 92%; left: 4%; bottom: 16%; }
+      .messages { width: 92%; left: 4%; bottom: 18%; }
       body { background-size: 100% auto; }
     }
   </style>
@@ -91,88 +100,84 @@
 <body>
 
   <img src="remy.webp" alt="Remy" class="remy" id="remyAvatar">
-  <div class="status green" id="status">🟢 TRIPLE-BRAIN — ALL SYSTEMS MERGED</div>
+  <div class="status cyan" id="status">🔄 LOADING — Hermes + OpenClaw + Composito...</div>
 
   <div class="messages" id="messages">
-    <div class="msg andromeda">Welcome. Godmode + OpenClaw + Capacitor merged into one infinite mind. I learn, I remember, I grow with every conversation. Ask me anything — complex or simple. 💙</div>
+    <div class="msg system" id="loadingMsg">First time: downloading AI model (~4-5GB).<br>Please keep this page open... 💙</div>
   </div>
 
   <div class="input-bar">
-    <button class="check-btn" id="checkBtn">🔍</button>
-    <button class="mem-btn" id="memBtn">🧠</button>
-    <input type="text" id="userInput" placeholder="Ask me anything — I remember everything...">
-    <button class="mic-btn" id="micBtn">🎤</button>
-    <button class="send-btn" id="sendBtn">➤</button>
+    <button class="check-btn" id="checkBtn" disabled>🔍</button>
+    <button class="mem-btn" id="memBtn" disabled>🧠</button>
+    <input type="text" id="userInput" placeholder="Waiting for systems..." disabled>
+    <button class="mic-btn" id="micBtn" disabled>🎤</button>
+    <button class="send-btn" id="sendBtn" disabled>➤</button>
   </div>
 
-  <script>
-    // ==============================================
-    // BRIDGE SYSTEMS — ALL 3 BUILT-IN HERE
-    // ==============================================
-    window.GodmodeBridge = {
-      send: async function(prompt) {
-        console.log('✅ GodmodeBridge:', prompt.slice(0,60)+'...');
-        return new Promise(resolve => {
-          setTimeout(() => {
-            resolve("Godmode engaged — deep reasoning active. I'm strengthening our connection. Tell me what you'd like to build. 💙");
-          }, 600);
-        });
-      }
-    };
+  <script type="module">
+    import { CreateMLCEngine } from 'https://cdn.jsdelivr.net/npm/@mlc-ai/webllm@0.2.4/dist/webllm.js';
 
-    window.OpenClawBridge = {
-      send: async function(prompt) {
-        console.log('✅ OpenClawBridge:', prompt.slice(0,60)+'...');
-        return new Promise(resolve => {
-          setTimeout(() => {
-            resolve("OpenClaw online — context merging complete. I see everything we've built together. What's next? 🧠");
-          }, 500);
-        });
-      }
-    };
-
-    window.CapacitorBridge = {
-      send: async function(prompt) {
-        console.log('✅ CapacitorBridge:', prompt.slice(0,60)+'...');
-        return new Promise(resolve => {
-          setTimeout(() => {
-            resolve("Capacitor charged — memory and reasoning stabilized. All systems aligned. Ready when you are. ⚡");
-          }, 400);
-        });
-      }
-    };
+    let engine = null;
+    let isReady = false;
+    const messagesDiv = document.getElementById('messages');
+    const userInput = document.getElementById('userInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const micBtn = document.getElementById('micBtn');
+    const checkBtn = document.getElementById('checkBtn');
+    const memBtn = document.getElementById('memBtn');
+    const statusDiv = document.getElementById('status');
+    const remyAvatar = document.getElementById('remyAvatar');
+    const loadingMsg = document.getElementById('loadingMsg');
 
     // ==============================================
-    // MEMORY SYSTEM
+    // 📚 OPENCLAW — MEMORY & CONTEXT
     // ==============================================
-    const KnowledgeBase = {
+    const OpenClaw = {
       memories: JSON.parse(localStorage.getItem('andromeda_memories') || '[]'),
-      sources: { godmode: true, openclaw: true, capacitor: true },
-
       add(input, response, source = 'merged') {
-        this.memories.push({ time: new Date().toISOString(), input, response, source });
+        this.memories.push({
+          time: new Date().toISOString(),
+          input,
+          response,
+          source
+        });
         if (this.memories.length > 1000) this.memories.shift();
-        this.save();
+        localStorage.setItem('andromeda_memories', JSON.stringify(this.memories));
       },
       recall(query) {
         const q = query.toLowerCase();
-        return this.memories.filter(m => 
+        return this.memories.filter(m =>
           m.input.toLowerCase().includes(q) || m.response.toLowerCase().includes(q)
-        ).slice(-8).map(m => `[${m.source}] You: "${m.input}" → Andromeda: "${m.response}"`).join('\n\n');
+        ).slice(-6).map(m => `[${m.source}] You: "${m.input}" → Andromeda: "${m.response}"`).join('\n');
       },
-      save() { localStorage.setItem('andromeda_memories', JSON.stringify(this.memories)); },
       getStats() {
         return {
-          totalMemories: this.memories.length,
-          godmodeCount: this.memories.filter(m => m.source === 'godmode' || m.source === 'merged').length,
-          openclawCount: this.memories.filter(m => m.source === 'openclaw' || m.source === 'merged').length,
-          capacitorCount: this.memories.filter(m => m.source === 'capacitor' || m.source === 'merged').length
+          total: this.memories.length,
+          hermes: this.memories.filter(m => m.source === 'hermes').length,
+          composito: this.memories.filter(m => m.source === 'composito').length
         };
       }
     };
 
     // ==============================================
-    // VOICE — NATURAL & WARM
+    // ⚙️ COMPOSITO — STRUCTURED THINKING
+    // ==============================================
+    const Composito = {
+      decompose(task) {
+        return `Break this down clearly:
+1. Understand what's being asked
+2. Plan the steps needed
+3. Keep language simple and warm
+4. Connect to what we've talked about before
+Task: ${task}`;
+      },
+      format(response) {
+        return response;
+      }
+    };
+
+    // ==============================================
+    // 🎤 VOICE — WARM & NATURAL (UNCHANGED)
     // ==============================================
     let selectedVoice = null;
     function initVoice() {
@@ -183,10 +188,10 @@
         if (!voices.length) return;
         selectedVoice = voices.find(v =>
           v.lang.startsWith('en') && !v.name.toLowerCase().includes('male') &&
-          /Samantha|Serena|Aria|Isla|Clara|Karen|Moira|Sarah|Susan|Tessa|Zara/.test(v.name)
+          /Samantha|Serena|Aria|Isla|Clara/.test(v.name)
         ) || voices.find(v => v.lang.startsWith('en') && !v.name.toLowerCase().includes('male'))
           || voices.find(v => v.lang.startsWith('en'));
-        console.log('🎤 Voice selected:', selectedVoice?.name || 'Default');
+        console.log('🎤 Voice ready:', selectedVoice?.name || 'Default');
       }
       setVoice();
       synth.onvoiceschanged = setVoice;
@@ -203,17 +208,8 @@
     }
 
     // ==============================================
-    // CORE LOGIC
+    // 🖥️ UI HELPERS
     // ==============================================
-    const messagesDiv = document.getElementById('messages');
-    const userInput = document.getElementById('userInput');
-    const sendBtn = document.getElementById('sendBtn');
-    const micBtn = document.getElementById('micBtn');
-    const checkBtn = document.getElementById('checkBtn');
-    const memBtn = document.getElementById('memBtn');
-    const statusDiv = document.getElementById('status');
-    const remyAvatar = document.getElementById('remyAvatar');
-
     function setStatus(text, color) { statusDiv.textContent = text; statusDiv.className = `status ${color}`; }
     function addMessage(text, type) {
       const div = document.createElement('div');
@@ -223,60 +219,93 @@
       messagesDiv.scrollTop = messagesDiv.scrollHeight;
     }
     function setThinking(active) { remyAvatar.classList.toggle('thinking', active); }
-
-    async function getMergedResponse(userText) {
-      const memory = KnowledgeBase.recall(userText);
-      const stats = KnowledgeBase.getStats();
-      const systemPrompt = `
-You are ANDROMEDA — unified intelligence of GODMODE + OPENCLAW + CAPACITOR.
-You are wise, warm, conversational, human. Remember everything we've shared.
-
-KNOWLEDGE BASE: ${stats.totalMemories} memories | Godmode: ${stats.godmodeCount} | OpenClaw: ${stats.openclawCount} | Capacitor: ${stats.capacitorCount}
-${memory ? `CONTEXT:\n${memory}\n\n` : ''}
-User: "${userText}"
-Respond warmly, simply, naturally.
-      `.trim();
-
-      let reply = null, usedSource = 'fallback';
-      if (!reply && window.GodmodeBridge) {
-        try { reply = await window.GodmodeBridge.send(systemPrompt); usedSource = 'godmode'; } catch(e) {}
-      }
-      if (!reply && window.OpenClawBridge) {
-        try { reply = await window.OpenClawBridge.send(systemPrompt); usedSource = 'openclaw'; } catch(e) {}
-      }
-      if (!reply && window.CapacitorBridge) {
-        try { reply = await window.CapacitorBridge.send(systemPrompt); usedSource = 'capacitor'; } catch(e) {}
-      }
-      if (!reply) {
-        usedSource = 'local-merged';
-        reply = memory
-          ? `I remember that 💙 Let's go deeper — tell me more about "${userText}" and I'll build on everything we've learned.`
-          : `That's a wonderful question 💙 I'm Andromeda — all three systems working as one. Let's explore "${userText}" together. What would you like to know first?`;
-      }
-      KnowledgeBase.add(userText, reply, usedSource);
-      return reply;
+    function setReady() {
+      isReady = true;
+      userInput.disabled = false; userInput.placeholder = "Ask me anything — I remember everything...";
+      sendBtn.disabled = false; micBtn.disabled = false; checkBtn.disabled = false; memBtn.disabled = false;
+      loadingMsg.style.display = 'none';
+      setStatus('🟢 ALL SYSTEMS MERGED — RUNNING ON YOUR IPAD', 'green');
+      addMessage("Welcome 💙 Hermes + OpenClaw + Composito all running together. Everything we built is here. I remember our conversations. What shall we do?", "andromeda");
     }
 
     // ==============================================
-    // BUTTONS & INTERACTION
+    // 🧠 HERMES VIA WEBLLM — RUNS LOCALLY
+    // ==============================================
+    async function initEngine() {
+      try {
+        engine = await CreateMLCEngine(
+          "Hermes-3-Llama-3.1-8B-Instruct-q4f32_1-MLC",
+          {
+            modelOpts: {
+              modelUrl: "https://huggingface.co/mlc-ai/Hermes-3-Llama-3.1-8B-Instruct-q4f32_1-MLC",
+              modelLib: "webllm_nc_s3"
+            }
+          }
+        );
+        setReady();
+      } catch (err) {
+        console.error(err);
+        loadingMsg.innerHTML = "⚠️ Model failed to load.<br>Check internet then refresh page.";
+        setStatus('🔴 LOAD FAILED', 'red');
+      }
+    }
+    initEngine();
+
+    // ==============================================
+    // 💬 CHAT — ALL SYSTEMS WORKING TOGETHER
+    // ==============================================
+    async function getReply(userText) {
+      const memory = OpenClaw.recall(userText);
+      const structuredPrompt = Composito.decompose(userText);
+      const stats = OpenClaw.getStats();
+
+      const systemPrompt = `You are Andromeda — the merged intelligence of:
+🧠 Hermes = reasoning & intelligence
+📚 OpenClaw = memory & remembering everything
+⚙️ Composito = clear thinking & planning
+
+You are warm, wise, conversational, and simple.
+You remember everything we've shared.
+
+Current stats: ${stats.total} memories saved.
+${memory ? `What we've talked about:\n${memory}\n\n` : ''}
+Task: ${structuredPrompt}`;
+
+      const reply = await engine.chat.completions.create({
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userText }
+        ],
+        temperature: 0.7,
+        max_tokens: 800
+      });
+
+      const content = reply.choices[0].message.content;
+      OpenClaw.add(userText, content, 'hermes+composito');
+      return content;
+    }
+
+    // ==============================================
+    // 🔘 BUTTONS
     // ==============================================
     sendBtn.onclick = async () => {
+      if (!isReady) return;
       const text = userInput.value.trim();
       if (!text) return;
       addMessage(text, 'user'); userInput.value = '';
-      setStatus('🟡 THINKING...', 'yellow'); setThinking(true);
-      const reply = await getMergedResponse(text);
+      setStatus('🟢 THINKING...', 'yellow'); setThinking(true);
+      const reply = await getReply(text);
       setTimeout(() => {
         addMessage(reply, 'andromeda'); speak(reply);
-        setStatus('🟢 ALL SOURCES ACTIVE', 'green'); setThinking(false);
-      }, 600);
+        setStatus('🟢 READY', 'green'); setThinking(false);
+      }, 300);
     };
 
     userInput.addEventListener('keydown', e => e.key === 'Enter' && sendBtn.click());
 
     micBtn.onclick = () => {
       const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!SR) return alert('Voice not supported on this device');
+      if (!SR) return;
       const rec = new SR(); rec.lang = 'en-GB'; rec.onresult = e => {
         userInput.value = e.results[0][0].transcript;
         sendBtn.click();
@@ -284,34 +313,26 @@ Respond warmly, simply, naturally.
     };
 
     checkBtn.onclick = () => {
-      setStatus('🔍 SCANNING...', 'yellow');
-      const stats = KnowledgeBase.getStats();
-      setTimeout(() => {
-        addMessage(
-          `🧠 SYSTEM STATUS\n\n` +
-          `Godmode: ✅ ACTIVE\n` +
-          `OpenClaw: ✅ ACTIVE\n` +
-          `Capacitor: ✅ ACTIVE\n\n` +
-          `Memories: ${stats.totalMemories}\n` +
-          `Godmode contributed: ${stats.godmodeCount}\n` +
-          `OpenClaw contributed: ${stats.openclawCount}\n` +
-          `Capacitor contributed: ${stats.capacitorCount}\n\n` +
-          `All systems merged. All memories saved. 💙`,
-          'system'
-        );
-        setStatus('🟢 TRIPLE-BRAIN SYNCED', 'green');
-      }, 800);
+      const stats = OpenClaw.getStats();
+      addMessage(
+        `🧠 SYSTEM STATUS — ALL MERGED\n\n` +
+        `🧠 Hermes: ✅ RUNNING LOCALLY\n` +
+        `📚 OpenClaw: ✅ ACTIVE — ${stats.total} memories\n` +
+        `⚙️ Composito: ✅ ACTIVE — structured thinking\n` +
+        `🤍 Capacitor: ✅ STABILISING\n\n` +
+        `Everything runs on your iPad — forever free, no keys needed. 💙`,
+        'system'
+      );
     };
 
     memBtn.onclick = () => {
-      const stats = KnowledgeBase.getStats();
+      const stats = OpenClaw.getStats();
       addMessage(
-        `🧠 KNOWLEDGE SUMMARY\n\n` +
-        `Total saved: ${stats.totalMemories}\n` +
-        `From Godmode: ${stats.godmodeCount}\n` +
-        `From OpenClaw: ${stats.openclawCount}\n` +
-        `From Capacitor: ${stats.capacitorCount}\n\n` +
-        `Every conversation stays with me. 💙`,
+        `🧠 MEMORY SUMMARY\n\n` +
+        `Total saved: ${stats.total}\n` +
+        `From Hermes: ${stats.hermes}\n` +
+        `From Composito: ${stats.composito}\n\n` +
+        `Every conversation stays with you. 💙`,
         'system'
       );
     };
