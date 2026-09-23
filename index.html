@@ -14,9 +14,9 @@
     .status-text{font-size:15px;font-weight:600;white-space:nowrap}
     .status-green{color:var(--green)}
 
-    .remy{position:absolute;right:4%;top:52%;transform:translateY(-50%);width:22%;max-width:140px;height:auto;z-index:50;opacity:.95;pointer-events:none;transition:.3s ease}
-    .remy.thinking{opacity:1;transform:translateY(-50%) scale(1.08);filter:drop-shadow(0 0 20px rgba(80,180,255,.5))}
-    .remy img{width:100%;height:auto;display:block;border-radius:50%}
+    .remy{position:absolute;right:3%;bottom:130px;width:20%;max-width:120px;height:auto;z-index:50;opacity:.95;pointer-events:none;transition:.3s ease}
+    .remy.thinking{opacity:1;transform:scale(1.08);filter:drop-shadow(0 0 20px rgba(80,180,255,.5))}
+    .remy img{width:100%;height:auto;display:block;border-radius:16px;mix-blend-mode:screen;filter:contrast(1.05) brightness(1.1)}
 
     .messages{position:fixed;top:calc(max(10px,env(safe-area-inset-top)) + 70px);left:4%;width:68%;max-width:520px;bottom:115px;overflow-y:auto;padding-right:4px}
     .messages::-webkit-scrollbar{width:3px}
@@ -44,7 +44,7 @@
     .input:focus{border-color:var(--accent)}
 
     @media (max-width:480px){
-      .remy{width:24%;right:3%}
+      .remy{width:22%;right:2%;bottom:125px}
       .messages{width:68%;left:3%}
       .btn{width:42px;height:42px;font-size:18px}
       .input{font-size:15px;padding:0 16px}
@@ -55,11 +55,7 @@
 <body>
 
   <div class="remy" id="remyAvatar">
-    <img 
-      src="remy.webp"
-      alt="Remy"
-      onerror="this.style.display='none'"
-    >
+    <img src="remy.webp" alt="Remy" onerror="this.style.display='none'">
   </div>
 
   <div class="status-bar">
