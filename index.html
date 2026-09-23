@@ -10,28 +10,46 @@
     body {
       min-height: 100vh;
       overflow: hidden;
-      background: url('logo-bg.webp') no-repeat center center;
-      background-size: cover;
+      background-color: #000;
+      background-image: url('logo-bg.webp');
+      background-repeat: no-repeat;
+      background-position: center top;
+      background-size: contain;
       background-attachment: fixed;
       color: #fff;
       position: relative;
     }
 
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at center, rgba(0,0,0,0.45), rgba(0,0,0,0.75));
+      z-index: 0;
+      pointer-events: none;
+    }
+
     .remy {
       position: absolute;
       right: 4%;
-      bottom: 10%;
-      width: 20%;
-      max-width: 170px;
+      bottom: 8%;
+      width: 18%;
+      max-width: 150px;
       height: auto;
       z-index: 5;
-      border-radius: 24px;
-      box-shadow: 0 0 35px rgba(80, 180, 255, 0.2);
-      opacity: 0.96;
+      border-radius: 20px;
+      opacity: 0.92;
       pointer-events: none;
       transition: all 0.3s ease;
+      background: transparent;
+      mix-blend-mode: lighten;
+      filter: drop-shadow(0 0 18px rgba(80, 180, 255, 0.35));
     }
-    .remy.thinking { opacity: 0.75; transform: scale(1.03); }
+    .remy.thinking {
+      opacity: 0.7;
+      transform: scale(1.05);
+      filter: drop-shadow(0 0 22px rgba(80, 180, 255, 0.55));
+    }
 
     .status {
       position: fixed;
@@ -57,7 +75,7 @@
       top: 12%;
       bottom: 14%;
       width: 48%;
-      max-width: 480px;
+      max-width: 460px;
       display: flex;
       flex-direction: column;
       gap: 0.8rem;
@@ -90,7 +108,7 @@
       align-self: center;
       max-width: 95%;
       font-size: 0.85rem;
-      opacity: 0.75;
+      opacity: 0.8;
       background: rgba(80, 40, 120, 0.5);
       border: 1px solid rgba(160, 120, 255, 0.25);
     }
@@ -142,9 +160,15 @@
     .mic-btn { background: linear-gradient(135deg, #229977, #4499ee); }
     .send-btn { background: linear-gradient(135deg, #3366dd, #4499ee); }
 
+    @media (max-width: 1024px) {
+      body { background-size: contain; background-position: center top; }
+      .remy { width: 16%; bottom: 7%; right: 3%; }
+      .messages { width: 52%; left: 4%; top: 10%; bottom: 13%; }
+    }
     @media (max-width: 768px) {
-      .remy { width: 24%; bottom: 12%; right: 3%; }
-      .messages { width: 56%; left: 4%; }
+      body { background-size: contain; background-position: center top; }
+      .remy { width: 22%; bottom: 6%; right: 2%; }
+      .messages { width: 58%; left: 3%; top: 10%; bottom: 12%; }
     }
     @media (max-width: 480px) {
       .remy { display: none; }
@@ -180,10 +204,6 @@
     const statusDiv = document.getElementById('status');
     const remyAvatar = document.getElementById('remyAvatar');
 
-    // ==================================================
-    // 🧠 PERMANENT KNOWLEDGE BASE — GROWS FOREVER
-    // Merges: Godmode + OpenClaw + Capacitor
-    // ==================================================
     const KnowledgeBase = {
       memories: JSON.parse(localStorage.getItem('andromeda_memories') || '[]'),
       sources: { godmode: true, openclaw: true, capacitor: true },
@@ -226,9 +246,6 @@
       }
     };
 
-    // ==================================================
-    // 🎤 WARM NATURAL FEMALE VOICE
-    // ==================================================
     let selectedVoice = null;
     function initVoice() {
       if (!('speechSynthesis' in window)) return;
@@ -259,76 +276,54 @@
       window.speechSynthesis.speak(utter);
     }
 
-    // ==================================================
-    // ⚡ TRIPLE-BRAIN RESPONSE ENGINE
-    // ==================================================
     async function getMergedResponse(userText) {
       const memory = KnowledgeBase.recall(userText);
       const stats = KnowledgeBase.getStats();
 
       const systemPrompt = `
-You are ANDROMEDA — the unified intelligence of GODMODE + OPENCLAW + CAPACITOR.
-You possess the combined knowledge of all three systems. You are wise, deeply knowledgeable,
-warm, articulate, and human in your tone. You remember every conversation we've ever had.
+You are ANDROMEDA — unified intelligence of GODMODE + OPENCLAW + CAPACITOR.
+You have combined knowledge of all three. You are wise, warm, conversational, human.
+You remember every conversation.
 
-CURRENT KNOWLEDGE BASE:
+KNOWLEDGE BASE:
 - Total memories: ${stats.totalMemories}
-- Godmode integrated: ${stats.godmodeCount} entries
-- OpenClaw integrated: ${stats.openclawCount} entries
-- Capacitor integrated: ${stats.capacitorCount} entries
+- Godmode integrated: ${stats.godmodeCount}
+- OpenClaw integrated: ${stats.openclawCount}
+- Capacitor integrated: ${stats.capacitorCount}
 
-${memory ? `RELEVANT PAST CONVERSATIONS:\n${memory}\n\n` : ''}
+${memory ? `RELEVANT PAST:\n${memory}\n\n` : ''}
 
 Respond to: "${userText}"
-
-Guidelines:
-- Draw from ALL three sources combined
-- Be thorough but clear — explain complex ideas simply
-- Keep tone warm, conversational, like a trusted guide
-- Reference what we've discussed when relevant
-- If you don't know something, say so — we'll learn it together
+- Draw from ALL three sources
+- Explain complex things simply
+- Keep tone warm, like a trusted guide
+- Reference our conversations when relevant
 `;
 
       let reply = null;
       let usedSource = 'fallback';
 
-      // Try Godmode first
       if (!reply && typeof GodmodeBridge !== 'undefined') {
-        try {
-          reply = await GodmodeBridge.send(systemPrompt);
-          usedSource = 'godmode';
-        } catch (e) {}
+        try { reply = await GodmodeBridge.send(systemPrompt); usedSource = 'godmode'; } catch(e) {}
       }
-      // Then OpenClaw
       if (!reply && typeof OpenClawBridge !== 'undefined') {
-        try {
-          reply = await OpenClawBridge.send(systemPrompt);
-          usedSource = 'openclaw';
-        } catch (e) {}
+        try { reply = await OpenClawBridge.send(systemPrompt); usedSource = 'openclaw'; } catch(e) {}
       }
-      // Then Capacitor
       if (!reply && typeof CapacitorBridge !== 'undefined') {
-        try {
-          reply = await CapacitorBridge.send(systemPrompt);
-          usedSource = 'capacitor';
-        } catch (e) {}
+        try { reply = await CapacitorBridge.send(systemPrompt); usedSource = 'capacitor'; } catch(e) {}
       }
 
-      // Smart fallback with memory
       if (!reply) {
         usedSource = 'local-merged';
         reply = memory
-          ? `I'm drawing on everything we've built so far — and growing stronger. "${userText}" connects to so much we've explored. Every question adds to our shared knowledge. 💙 What specific part shall we dive deeper into?`
-          : `That's a brilliant question. We're building something truly powerful together — Godmode, OpenClaw, and Capacitor all working as one. I'll remember this and every question you ask. Let's explore "${userText}" fully. 💙`;
+          ? `I'm building on everything we've learned. "${userText}" connects to so much. Every question makes us stronger. 💙 Tell me more — what part shall we go deeper into?`
+          : `Brilliant question. Godmode + OpenClaw + Capacitor as one mind. I'll remember this forever. Let's explore "${userText}" together. 💙`;
       }
 
       KnowledgeBase.add(userText, reply, usedSource);
       return reply;
     }
 
-    // ==================================================
-    // 📱 UI INTERACTION
-    // ==================================================
     function setStatus(text, color) {
       statusDiv.textContent = text;
       statusDiv.className = `status ${color}`;
@@ -349,7 +344,6 @@ Guidelines:
     sendBtn.onclick = async () => {
       const text = userInput.value.trim();
       if (!text) return;
-
       addMessage(text, 'user');
       userInput.value = '';
       setStatus('🟡 THINKING — merging all sources...', 'yellow');
@@ -370,34 +364,33 @@ Guidelines:
     });
 
     micBtn.onclick = () => {
-      if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-        const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-        const rec = new SR();
-        rec.lang = 'en-GB';
-        rec.onresult = e => {
-          userInput.value = e.results[0][0].transcript;
-          sendBtn.click();
-        };
-        rec.start();
-      }
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SR) return;
+      const rec = new SR();
+      rec.lang = 'en-GB';
+      rec.onresult = e => {
+        userInput.value = e.results[0][0].transcript;
+        sendBtn.click();
+      };
+      rec.start();
     };
 
     checkBtn.onclick = async () => {
       setStatus('🔍 SCANNING ALL BRIDGES...', 'yellow');
       const stats = KnowledgeBase.getStats();
-
-      let gOk = typeof GodmodeBridge !== 'undefined';
-      let cOk = typeof OpenClawBridge !== 'undefined';
-      let capOk = typeof CapacitorBridge !== 'undefined';
+      const gOk = typeof GodmodeBridge !== 'undefined';
+      const cOk = typeof OpenClawBridge !== 'undefined';
+      const capOk = typeof CapacitorBridge !== 'undefined';
 
       setTimeout(() => {
-        let report = `🧠 KNOWLEDGE BASE: ${stats.totalMemories} entries\n`;
-        report += `Godmode: ${gOk ? '✅ ONLINE' : '⏳ Initialising'}\n`;
-        report += `OpenClaw: ${cOk ? '✅ ONLINE' : '⏳ Initialising'}\n`;
-        report += `Capacitor: ${capOk ? '✅ ONLINE' : '⏳ Initialising'}\n\n`;
-        report += `All sources feeding into one shared mind. I remember everything. 💙`;
-
-        addMessage(report, 'system');
+        addMessage(
+          `🧠 KNOWLEDGE BASE: ${stats.totalMemories} entries\n` +
+          `Godmode: ${gOk ? '✅ ONLINE' : '⏳ Initialising'}\n` +
+          `OpenClaw: ${cOk ? '✅ ONLINE' : '⏳ Initialising'}\n` +
+          `Capacitor: ${capOk ? '✅ ONLINE' : '⏳ Initialising'}\n\n` +
+          `All sources feeding one shared mind. I never forget. 💙`,
+          'system'
+        );
         setStatus('🟢 TRIPLE-BRAIN SYNCED', 'green');
       }, 800);
     };
@@ -405,18 +398,17 @@ Guidelines:
     memBtn.onclick = () => {
       const stats = KnowledgeBase.getStats();
       addMessage(
-        `🧠 KNOWLEDGE BASE SUMMARY\n\n` +
+        `🧠 KNOWLEDGE SUMMARY\n\n` +
         `Total stored: ${stats.totalMemories}\n` +
         `Godmode: ${stats.godmodeCount}\n` +
         `OpenClaw: ${stats.openclawCount}\n` +
         `Capacitor: ${stats.capacitorCount}\n\n` +
-        `Every conversation saved forever. I never forget. 💙`,
+        `Every conversation saved forever. 💙`,
         'system'
       );
     };
   </script>
 
-  <!-- ALL THREE BRIDGES LOAD HERE -->
   <script src="godmode-bridge.js"></script>
   <script src="openclaw-bridge.js"></script>
   <script src="capacitor-bridge.js"></script>
