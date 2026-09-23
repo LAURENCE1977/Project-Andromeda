@@ -6,118 +6,87 @@
   <title>Project Andromeda</title>
   <script type="module" src="https://cdn.jsdelivr.net/npm/@mlc-ai/webllm@0.2.4/dist/webllm.js"></script>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
-    body {
-      min-height: 100vh; overflow: hidden; background-color: #000;
-      background-image: url('logo-bg.webp'); background-repeat: no-repeat;
-      background-position: center top; background-size: 90% auto; background-attachment: fixed;
-      color: #fff; position: relative;
-    }
-    body::before {
-      content: ""; position: fixed; inset: 0;
-      background: radial-gradient(circle at center, rgba(0,0,0,0.35), rgba(0,0,0,0.65));
-      z-index: 0; pointer-events: none;
-    }
+    *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,-apple-system,sans-serif}
+    body{min-height:100vh;overflow:hidden;background:#000;background-image:url('logo-bg.webp');background-repeat:no-repeat;background-position:center top;background-size:90% auto;background-attachment:fixed;color:#fff;position:relative}
+    body::before{content:"";position:fixed;inset:0;background:radial-gradient(circle at center,rgba(0,0,0,.35),rgba(0,0,0,.65));z-index:0;pointer-events:none}
 
-    .remy {
-      position: absolute; right: 5%; top: 55%; transform: translateY(-50%);
-      width: 14%; max-width: 130px; height: auto; z-index: 8; opacity: 0.95;
-      pointer-events: none; transition: all 0.3s ease; background: transparent !important;
-      border: none !important; border-radius: 0 !important; box-shadow: none !important;
-      mix-blend-mode: lighten; filter: drop-shadow(0 0 12px rgba(80,180,255,0.25));
-    }
-    .remy.thinking { opacity: 0.8; transform: translateY(-50%) scale(1.05); filter: drop-shadow(0 0 18px rgba(80,180,255,0.45)); }
+    .remy{position:absolute;right:5%;top:55%;transform:translateY(-50%);width:14%;max-width:130px;height:auto;z-index:8;opacity:.95;pointer-events:none;transition:.3s ease;background:transparent!important;border:none!important;border-radius:0!important;box-shadow:none!important;mix-blend-mode:lighten;filter:drop-shadow(0 0 12px rgba(80,180,255,.25))}
+    .remy.thinking{opacity:.8;transform:translateY(-50%) scale(1.05);filter:drop-shadow(0 0 18px rgba(80,180,255,.45))}
 
-    .status {
-      position: fixed; top: 0.75rem; left: 50%; transform: translateX(-50%);
-      padding: 0.4rem 1.25rem; border-radius: 50px; font-size: 0.85rem; font-weight: 600;
-      z-index: 15; background: rgba(0,0,0,0.5); backdrop-filter: blur(12px);
-      border: 1px solid rgba(68,170,255,0.3);
-    }
-    .status.green { color: #7ee28f; border-color: #4ade80; }
-    .status.yellow { color: #f9d760; border-color: #facc15; }
-    .status.cyan { color: #67e8ff; border-color: #22d3ee; }
-    .status.red { color: #ff6b6b; border-color: #ef4444; }
+    .status{position:fixed;top:.75rem;left:50%;transform:translateX(-50%);padding:.4rem 1.25rem;border-radius:50px;font-size:.85rem;font-weight:600;z-index:15;background:rgba(0,0,0,.5);backdrop-filter:blur(12px);border:1px solid rgba(68,170,255,.3)}
+    .status.green{color:#7ee28f;border-color:#4ade80}
+    .status.yellow{color:#f9d760;border-color:#facc15}
+    .status.cyan{color:#67e8ff;border-color:#22d3ee}
+    .status.orange{color:#ffb366;border-color:#f97316}
 
-    .messages {
-      position: fixed; left: 4%; top: 12%; bottom: 22%; width: 52%; max-width: 440px;
-      display: flex; flex-direction: column; gap: 0.7rem; overflow-y: auto;
-      z-index: 6; padding-right: 0.5rem;
-    }
-    .msg {
-      padding: 0.8rem 1.1rem; border-radius: 20px; max-width: 92%; line-height: 1.55;
-      background: rgba(20,60,120,0.65); backdrop-filter: blur(12px);
-      border: 1px solid rgba(100,180,255,0.2);
-      box-shadow: 0 4px 15px rgba(0,0,0,0.15); font-size: 0.95rem;
-    }
-    .msg.user { margin-left: auto; background: rgba(30,90,180,0.7); border-bottom-right-radius: 6px; }
-    .msg.andromeda { margin-right: auto; background: rgba(15,80,140,0.65); border-bottom-left-radius: 6px; }
-    .msg.system {
-      align-self: center; max-width: 95%; font-size: 0.8rem; opacity: 0.9;
-      background: rgba(80,40,120,0.5); border: 1px solid rgba(160,120,255,0.25);
-    }
+    /* === PROGRESS BAR — NEW === */
+    .progress-wrap{position:fixed;top:4rem;left:50%;transform:translateX(-50%);width:85%;max-width:400px;z-index:20}
+    .progress-label{text-align:center;font-size:.8rem;color:#a0d8ff;margin-bottom:.4rem}
+    .progress-bar-bg{height:12px;background:rgba(30,60,100,.5);border-radius:6px;overflow:hidden;border:1px solid rgba(100,180,255,.3)}
+    .progress-bar-fill{height:100%;background:linear-gradient(90deg,#22d3ee,#3b82f6);border-radius:6px;width:0;transition:width .4s ease}
+    .progress-percent{text-align:center;font-size:.9rem;font-weight:700;margin-top:.3rem;color:#fff}
+    .progress-done{background:linear-gradient(90deg,#22c55e,#10b981)}
 
-    .input-bar {
-      position: fixed; bottom: 1.2rem; left: 50%; transform: translateX(-50%);
-      width: 94%; max-width: 700px; background: rgba(0,0,0,0.5);
-      border-radius: 50px; padding: 0.7rem 1rem; backdrop-filter: blur(15px);
-      border: 1px solid rgba(68,170,255,0.3); display: flex; gap: 0.6rem;
-      align-items: center; z-index: 15;
-    }
-    input {
-      flex: 1; padding: 0.85rem 1.2rem; border-radius: 25px; border: none;
-      background: rgba(255,255,255,0.1); color: #fff; font-size: 0.95rem; outline: none;
-    }
-    input::placeholder { color: rgba(255,255,255,0.5); }
-    button {
-      width: 44px; height: 44px; border-radius: 50%; border: none; color: #fff;
-      font-size: 1.1rem; cursor: pointer; transition: all 0.2s ease; flex-shrink: 0;
-    }
-    button:active { transform: scale(0.95); }
-    button:disabled { opacity: 0.4; cursor: not-allowed; }
-    .check-btn { background: rgba(255,255,255,0.12); }
-    .mem-btn { background: linear-gradient(135deg, #7b2ffd, #a855f7); }
-    .mic-btn { background: linear-gradient(135deg, #229977, #4499ee); }
-    .send-btn { background: linear-gradient(135deg, #3366dd, #4499ee); }
+    .messages{position:fixed;left:4%;top:10rem;bottom:28%;width:52%;max-width:440px;display:flex;flex-direction:column;gap:.7rem;overflow-y:auto;z-index:6;padding-right:.5rem}
+    .msg{padding:.8rem 1.1rem;border-radius:20px;max-width:92%;line-height:1.55;background:rgba(20,60,120,.65);backdrop-filter:blur(12px);border:1px solid rgba(100,180,255,.2);box-shadow:0 4px 15px rgba(0,0,0,.15);font-size:.95rem}
+    .msg.user{margin-left:auto;background:rgba(30,90,180,.7);border-bottom-right-radius:6px}
+    .msg.andromeda{margin-right:auto;background:rgba(15,80,140,.65);border-bottom-left-radius:6px}
+    .msg.system{align-self:center;max-width:95%;font-size:.8rem;opacity:.9;background:rgba(80,40,120,.5);border:1px solid rgba(160,120,255,.25)}
+    .msg.download{align-self:center;max-width:95%;background:rgba(25,120,80,.5);border:1px solid rgba(100,255,150,.3)}
+    .download-btn{display:inline-block;margin-top:.5rem;padding:.6rem 1.2rem;background:linear-gradient(135deg,#22c55e,#10b981);color:#fff;border-radius:25px;text-decoration:none;font-weight:600;font-size:.9rem}
 
-    @media (max-width: 1024px) {
-      body { background-size: 92% auto; }
-      .remy { width: 13%; right: 4%; top: 54%; }
-      .messages { width: 50%; left: 3%; bottom: 23%; }
+    .input-bar{position:fixed;bottom:1.2rem;left:50%;transform:translateX(-50%);width:94%;max-width:700px;background:rgba(0,0,0,.5);border-radius:50px;padding:.7rem 1rem;backdrop-filter:blur(15px);border:1px solid rgba(68,170,255,.3);display:flex;gap:.6rem;align-items:center;z-index:15}
+    input{flex:1;padding:.85rem 1.2rem;border-radius:25px;border:none;background:rgba(255,255,255,.1);color:#fff;font-size:.95rem;outline:none}
+    input::placeholder{color:rgba(255,255,255,.5)}
+    button{width:44px;height:44px;border-radius:50%;border:none;color:#fff;font-size:1.1rem;cursor:pointer;transition:.2s ease;flex-shrink:0}
+    button:active{transform:scale(.95)}
+    button:disabled{opacity:.4;cursor:not-allowed}
+    .check-btn{background:rgba(255,255,255,.12)}
+    .mem-btn{background:linear-gradient(135deg,#7b2ffd,#a855f7)}
+    .dl-btn{background:linear-gradient(135deg,#22c55e,#10b981)}
+    .mic-btn{background:linear-gradient(135deg,#229977,#4499ee)}
+    .send-btn{background:linear-gradient(135deg,#3366dd,#4499ee)}
+
+    @media (max-width:768px){
+      .remy{width:18%;right:3%;top:54%}
+      .messages{width:54%;left:3%}
+      .progress-wrap{width:90%}
     }
-    @media (max-width: 768px) {
-      body { background-size: 95% auto; }
-      .remy { width: 18%; right: 3%; top: 54%; }
-      .messages { width: 54%; left: 3%; bottom: 23%; }
-    }
-    @media (max-width: 480px) {
-      .remy { display: none; }
-      .messages { width: 92%; left: 4%; bottom: 18%; }
-      body { background-size: 100% auto; }
+    @media (max-width:480px){
+      .remy{display:none}
+      .messages{width:92%;left:4%}
+      body{background-size:100% auto}
     }
   </style>
 </head>
 <body>
 
-  <!-- REMY — Auto-fixes filename issues -->
   <img 
     src="remy.webp" 
     onerror="this.src='Remy.webp';this.onerror=()=>{this.src='remy.png';this.onerror=()=>{this.src='Remy.png';this.onerror=null}}"
-    alt="Remy" 
-    class="remy" 
-    id="remyAvatar"
+    alt="Remy" class="remy" id="remyAvatar"
   >
 
-  <div class="status cyan" id="status">🔄 LOADING — Micro Hermes + OpenClaw + Composito...</div>
+  <div class="status cyan" id="status">🔄 LOADING SYSTEMS...</div>
+
+  <!-- === PROGRESS BAR — NEW === -->
+  <div class="progress-wrap" id="progressWrap">
+    <div class="progress-label" id="progressLabel">Downloading AI model...</div>
+    <div class="progress-bar-bg">
+      <div class="progress-bar-fill" id="progressFill"></div>
+    </div>
+    <div class="progress-percent" id="progressPercent">0%</div>
+  </div>
 
   <div class="messages" id="messages">
-    <div class="msg system" id="loadingMsg">First time: downloading lightweight AI (~2.2GB).<br>Keep page open — much faster now 💙</div>
+    <div class="msg system" id="loadingMsg">First time: lightweight AI (~2.2GB).<br>Watch the bar below — no need to stare 💙</div>
   </div>
 
   <div class="input-bar">
     <button class="check-btn" id="checkBtn" disabled>🔍</button>
     <button class="mem-btn" id="memBtn" disabled>🧠</button>
-    <input type="text" id="userInput" placeholder="Waiting for systems..." disabled>
+    <button class="dl-btn" id="dlBtn" disabled>⬇️</button>
+    <input type="text" id="userInput" placeholder="Waiting..." disabled>
     <button class="mic-btn" id="micBtn" disabled>🎤</button>
     <button class="send-btn" id="sendBtn" disabled>➤</button>
   </div>
@@ -127,21 +96,45 @@
 
     let engine = null;
     let isReady = false;
+    let dlMode = false;
     const messagesDiv = document.getElementById('messages');
     const userInput = document.getElementById('userInput');
     const sendBtn = document.getElementById('sendBtn');
     const micBtn = document.getElementById('micBtn');
     const checkBtn = document.getElementById('checkBtn');
     const memBtn = document.getElementById('memBtn');
+    const dlBtn = document.getElementById('dlBtn');
     const statusDiv = document.getElementById('status');
     const remyAvatar = document.getElementById('remyAvatar');
     const loadingMsg = document.getElementById('loadingMsg');
+    const progressFill = document.getElementById('progressFill');
+    const progressPercent = document.getElementById('progressPercent');
+    const progressLabel = document.getElementById('progressLabel');
+    const progressWrap = document.getElementById('progressWrap');
 
-    // ========== OPENCLAW — MEMORY SYSTEM ==========
+    // ========== PROGRESS UPDATER ==========
+    function setProgress(percent, labelText=null) {
+      percent = Math.max(0, Math.min(100, percent));
+      progressFill.style.width = percent + '%';
+      progressPercent.textContent = Math.round(percent) + '%';
+      if (labelText) progressLabel.textContent = labelText;
+      if (percent >= 100) {
+        progressFill.classList.add('progress-done');
+        progressLabel.textContent = '✅ Ready!';
+      } else {
+        progressFill.classList.remove('progress-done');
+      }
+    }
+
+    function hideProgress() {
+      progressWrap.style.display = 'none';
+    }
+
+    // ========== OPENCLAW — MEMORY ==========
     const OpenClaw = {
       memories: JSON.parse(localStorage.getItem('andromeda_memories') || '[]'),
-      add(input, response, source = 'merged') {
-        this.memories.push({ time: new Date().toISOString(), input, response, source });
+      add(input, response, source='merged') {
+        this.memories.push({time:Date.now(),input,response,source});
         if (this.memories.length > 1000) this.memories.shift();
         localStorage.setItem('andromeda_memories', JSON.stringify(this.memories));
       },
@@ -151,33 +144,45 @@
           m.input.toLowerCase().includes(q) || m.response.toLowerCase().includes(q)
         ).slice(-6).map(m => `[${m.source}] You: "${m.input}" → Me: "${m.response}"`).join('\n');
       },
-      getStats() { return { total: this.memories.length; }
+      getStats() { return {total: this.memories.length}; }
     };
 
-    // ========== COMPOSITO — CLEAR THINKING ==========
+    // ========== COMPOSITO ==========
     const Composito = {
       decompose(task) {
-        return `Think clearly:
-1. Understand what's wanted
-2. Keep it simple and warm
-3. Connect to past conversations
-Task: ${task}`;
+        return `Keep it warm, simple, genuine. Connect to past conversations. Task: ${task}`;
       }
     };
 
-    // ========== VOICE — WARM & NATURAL ==========
+    // ========== DOWNLOAD BRIDGE ==========
+    const DownloadBridge = {
+      process(link) {
+        if (!link?.trim()) return null;
+        const url = link.trim();
+        let platform = 'File';
+        if (/youtube\.com|youtu\.be/.test(url)) platform = 'YouTube';
+        else if (/tiktok\.com/.test(url)) platform = 'TikTok';
+        else if (/instagram\.com/.test(url)) platform = 'Instagram';
+        else if (/twitter\.com|x\.com/.test(url)) platform = 'X/Twitter';
+        else if (/soundcloud\.com/.test(url)) platform = 'SoundCloud';
+        else if (/vimeo\.com/.test(url)) platform = 'Vimeo';
+        return {platform, url, msg: `✅ ${platform} link detected — ready`};
+      }
+    };
+
+    // ========== VOICE ==========
     let selectedVoice = null;
     function initVoice() {
       if (!('speechSynthesis' in window)) return;
       const synth = window.speechSynthesis;
       function setVoice() {
-        const voices = synth.getVoices();
-        if (!voices.length) return;
-        selectedVoice = voices.find(v =>
-          v.lang.startsWith('en') && !v.name.toLowerCase().includes('male') &&
-          /Samantha|Serena|Aria|Isla|Clara/.test(v.name)
-        ) || voices.find(v => v.lang.startsWith('en') && !v.name.toLowerCase().includes('male'))
-          || voices.find(v => v.lang.startsWith('en'));
+        const v = synth.getVoices();
+        if (!v.length) return;
+        selectedVoice = v.find(x =>
+          x.lang.startsWith('en') && !x.name.toLowerCase().includes('male') &&
+          /Samantha|Serena|Aria|Isla|Clara/.test(x.name)
+        ) || v.find(x => x.lang.startsWith('en') && !x.name.toLowerCase().includes('male'))
+          || v.find(x => x.lang.startsWith('en'));
       }
       setVoice();
       synth.onvoiceschanged = setVoice;
@@ -187,48 +192,61 @@ Task: ${task}`;
     function speak(text) {
       if (!('speechSynthesis' in window)) return;
       window.speechSynthesis.cancel();
-      const utter = new SpeechSynthesisUtterance(text);
-      if (selectedVoice) utter.voice = selectedVoice;
-      utter.rate = 0.91; utter.pitch = 1.12; utter.volume = 1;
-      window.speechSynthesis.speak(utter);
+      const u = new SpeechSynthesisUtterance(text);
+      if (selectedVoice) u.voice = selectedVoice;
+      u.rate = 0.91; u.pitch = 1.12; u.volume = 1;
+      window.speechSynthesis.speak(u);
     }
 
     // ========== UI HELPERS ==========
     function setStatus(text, color) { statusDiv.textContent = text; statusDiv.className = `status ${color}`; }
     function addMessage(text, type) {
-      const div = document.createElement('div');
-      div.className = `msg ${type}`;
-      div.textContent = text;
-      messagesDiv.appendChild(div);
+      const d = document.createElement('div');
+      d.className = `msg ${type}`;
+      d.textContent = text;
+      messagesDiv.appendChild(d);
       messagesDiv.scrollTop = messagesDiv.scrollHeight;
     }
     function setThinking(active) { remyAvatar.classList.toggle('thinking', active); }
     function setReady() {
       isReady = true;
-      userInput.disabled = false; userInput.placeholder = "Ask me anything — I remember everything...";
-      sendBtn.disabled = false; micBtn.disabled = false; checkBtn.disabled = false; memBtn.disabled = false;
+      userInput.disabled = false; userInput.placeholder = "Ask me anything...";
+      sendBtn.disabled = false; micBtn.disabled = false; checkBtn.disabled = false;
+      memBtn.disabled = false; dlBtn.disabled = false;
       loadingMsg.style.display = 'none';
-      setStatus('🟢 MICRO POWERHOUSE READY — RUNNING ON YOUR IPHONE', 'green');
-      addMessage("Welcome 💙 Lighter, faster, still powerful — right here on your device. Nothing shared, forever free. What shall we do?", "andromeda");
+      hideProgress();
+      setStatus('🟢 ALL SYSTEMS ONLINE', 'green');
+      addMessage("Welcome 💙 Everything's running right here on your iPhone. Paste links to download, or just chat. What shall we do?", "andromeda");
     }
 
-    // ========== LIGHTWEIGHT MODEL — 2.2GB NOT 5GB ==========
+    // ========== LOAD MODEL WITH PROGRESS ==========
     async function initEngine() {
       try {
+        setProgress(5, 'Connecting to model server...');
+        
         engine = await CreateMLCEngine(
           "Hermes-3-Llama-3.2-3B-Instruct-q4f32_1-MLC",
           {
             modelOpts: {
               modelUrl: "https://huggingface.co/mlc-ai/Hermes-3-Llama-3.2-3B-Instruct-q4f32_1-MLC",
               modelLib: "webllm_nc_s3"
+            },
+            progressCallback: (progress) => {
+              const pct = Math.round(progress * 100);
+              if (pct < 30) setProgress(pct, 'Downloading model files...');
+              else if (pct < 70) setProgress(pct, 'Preparing AI brain...');
+              else if (pct < 100) setProgress(pct, 'Finalising...');
+              else setProgress(100, '✅ Complete!');
             }
           }
         );
-        setReady();
+        
+        setTimeout(setReady, 600);
       } catch (err) {
         console.error(err);
-        loadingMsg.innerHTML = "⚠️ Download stalled.<br>Close tab → open fresh → try again.";
-        setStatus('🔴 LOAD FAILED', 'red');
+        setProgress(0, 'Stalled — close tab → open fresh');
+        setStatus('🔴 LOAD FAILED', 'orange');
+        loadingMsg.innerHTML = "⚠️ Download stalled.<br>Close this tab → open fresh → same link.<br>It will resume where it left off 💙";
       }
     }
     initEngine();
@@ -239,20 +257,23 @@ Task: ${task}`;
       const structured = Composito.decompose(userText);
       const stats = OpenClaw.getStats();
 
-      const systemPrompt = `You are Andromeda — Micro Powerhouse.
-🧠 Hermes-3 (lightweight, capable)
-📚 OpenClaw (remembers our conversations)
-⚙️ Composito (clear, simple thinking)
+      // Check for download link
+      const dlInfo = DownloadBridge.process(userText);
+      if (dlInfo) {
+        return `${dlInfo.msg}\n\nPaste the link directly and I'll guide you through downloading 💙`;
+      }
 
-Warm, genuine, honest. Keep replies natural and not too long.
-Memories saved: ${stats.total}
-${memory ? `What we've talked about:\n${memory}\n\n` : ''}
+      const sysPrompt = `You are Andromeda — Micro Powerhouse.
+🧠 Hermes-3.2-3B | 📚 OpenClaw Memory | ⬇️ Download Bridge
+Warm, genuine, keep replies natural.
+Memories: ${stats.total} saved.
+${memory ? `History:\n${memory}\n` : ''}
 Task: ${structured}`;
 
       const reply = await engine.chat.completions.create({
         messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userText }
+          {role:"system", content:sysPrompt},
+          {role:"user", content:userText}
         ],
         temperature: 0.7,
         max_tokens: 600
@@ -290,22 +311,27 @@ Task: ${structured}`;
       rec.start();
     };
 
+    dlBtn.onclick = () => {
+      dlMode = !dlMode;
+      addMessage(dlMode 
+        ? "⬇️ Download Mode ON — paste any link (YouTube, TikTok, Instagram, etc.) 💙"
+        : "💬 Chat Mode ON — just ask me anything", 'system');
+    };
+
     checkBtn.onclick = () => {
-      const stats = OpenClaw.getStats();
+      const s = OpenClaw.getStats();
       addMessage(
-        `🧠 SYSTEM STATUS — MICRO POWERHOUSE\n\n` +
-        `🧠 Hermes-3.2-3B: ✅ RUNNING LOCALLY\n` +
-        `📚 OpenClaw Memory: ${stats.total} saved\n` +
-        `⚙️ Composito Thinking: ✅ ACTIVE\n` +
+        `🧠 SYSTEM STATUS\n\n` +
+        `🧠 Hermes-3.2-3B: ✅ LOCAL\n` +
+        `📚 Memories: ${s.total}\n` +
+        `⬇️ Download Bridge: ✅ ACTIVE\n` +
         `🎤 Voice: ✅ ENABLED\n\n` +
-        `Everything runs on your iPhone — nothing shared, forever free. 💙`,
-        'system'
-      );
+        `Everything runs on your iPhone — forever free 💙`, 'system');
     };
 
     memBtn.onclick = () => {
-      const stats = OpenClaw.getStats();
-      addMessage(`🧠 MEMORY\n\nTotal conversations saved: ${stats.total}\n\nNothing ever leaves your device. 💙`, 'system');
+      const s = OpenClaw.getStats();
+      addMessage(`🧠 MEMORY\n\nSaved conversations: ${s.total}\n\nNothing leaves your device 💙`, 'system');
     };
   </script>
 </body>
