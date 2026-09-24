@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project Andromeda</title>
+
+<!-- ==============================================
+   ANDROMEDA — COMPLETE AI BASE LAYER
+   Transformers.js + WebLLM + ChatLLM
+   iPad / iPhone Friendly · 100% Free Open-Source
+   ============================================== -->
+
+<!-- 1. Hugging Face Transformers.js → Local AI Engine -->
+<script type="module" src="https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.3.2/dist/transformers.min.js"></script>
+
+<!-- 2. WebLLM → Runs Llama/Mistral/Gemma in Browser -->
+<script type="module">
+  import * as webllm from "https://esm.sh/@mlc-ai/web-llm@0.2.70";
+  window.WebLLM = webllm;
+  console.log("✅ WebLLM Loaded — Local AI Ready");
+</script>
+
+<!-- 3. ChatLLM → Multi-Model Hub (Claude/Gemini/Grok Base) -->
+<script src="https://cdn.jsdelivr.net/npm/@chatllm/browser@latest/dist/chatllm.umd.min.js"></script>
+
+<!-- 4. Andromeda Core System -->
+<script>
+const Andromeda = {
+  version: "1.0-ipad",
+  status: "initialising",
+  localAI: null,
+  connectors: { claude: false, gemini: false, grok: false },
+
+  async init() {
+    console.log("🚀 Andromeda Booting...");
+    this.status = "loading";
+    this.updateStatus("🔄 Loading AI Engine...");
+    
+    if (window.WebLLM) {
+      this.localAI = window.WebLLM;
+      this.connectors.local = true;
+      console.log("✅ Local WebLLM Active");
+    }
+    
+    this.status = "ready";
+    this.updateStatus("✅ Andromeda Online — All Systems Go");
+  },
+
+  updateStatus(msg) {
+    const badge = document.getElementById("andromeda-status");
+    if (badge) badge.textContent = msg;
+  },
+
+  registerConnector(name, active) {
+    this.connectors[name] = active;
+    console.log(`🔌 ${name}: ${active ? "CONNECTED ✅" : "DISCONNECTED ❌"}`);
+  }
+};
+
+document.addEventListener("DOMContentLoaded", () => Andromeda.init());
+</script>
+
+<!-- Status Badge -->
+<style>
+#andromeda-status {
+  position: fixed; bottom: 12px; left: 12px;
+  background: linear-gradient(135deg, #00b478, #0096a8);
+  color: white; padding: 8px 16px; border-radius: 24px;
+  font-size: 12px; font-weight: 500; z-index: 9999;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  box-shadow: 0 2px 10px rgba(0,180,120,0.3);
+}
+/* Mobile-optimised base layout */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { 
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #0a0a0f; color: #fff; min-height: 100vh;
+}
+</style>
+<div id="andromeda-status">🧠 Andromeda Starting...</div>
+
+</head>
+<body>
+
+<!-- Main Content Area -->
+<div style="padding: 20px; max-width: 100%; min-height: 100vh;">
+  <h1 style="font-size: 24px; margin-bottom: 10px;">Project Andromeda</h1>
+  <p style="color: #888; font-size: 14px;">AI Base System Active — Ready for Connectors</p>
+</div>
+
+</body>
+</html>
