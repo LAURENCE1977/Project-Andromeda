@@ -1,0 +1,46 @@
+name: Merge Skills into all-skills
+
+on:
+  workflow_dispatch:
+
+jobs:
+  merge:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout target repo
+        uses: actions/checkout@v4
+
+      - name: Create all-skills folder
+        run: mkdir -p all-skills
+
+      - name: Clone charlieautomatesskills → core-skills
+        run: |
+          git clone --depth 1 https://github.com/LAURENCE1977/charlieautomatesskills.git all-skills/core-skills
+          rm -rf all-skills/core-skills/.git
+
+      - name: Clone openclaw
+        run: |
+          git clone --depth 1 https://github.com/LAURENCE1977/openclaw.git all-skills/openclaw
+          rm -rf all-skills/openclaw/.git
+          rm -f all-skills/openclaw/.env
+
+      - name: Clone G0DM0D3 → godmode
+        run: |
+          git clone --depth 1 https://github.com/LAURENCE1977/G0DM0D3.git all-skills/godmode
+          rm -rf all-skills/godmode/.git
+
+      - name: Clone auto-browser
+        run: |
+          git clone --depth 1 https://github.com/LAURENCE1977/auto-browser.git all-skills/auto-browser
+          rm -rf all-skills/auto-browser/.git
+
+      - name: Remove placeholder file
+        run: rm -f all-skills/PLACEHOLDER.txt
+
+      - name: Commit & Push changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add all-skills/
+          git commit -m "Merge: core-skills, openclaw, godmode, auto-browser" || echo "No new changes"
+          git push
