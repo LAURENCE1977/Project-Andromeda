@@ -1,396 +1,234 @@
 <!DOCTYPE html>
-<html lang="en-GB">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0a0a1a">
   <title>Project Andromeda</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
     :root {
-      --bg: #050512;
-      --surface: #101025;
+      --bg: #050510;
       --accent: #6366f1;
-      --accent-soft: rgba(99, 102, 241, 0.15);
+      --accent-soft: rgba(99,102,241,0.15);
       --text: #e5e7eb;
-      --muted: #9ca3af;
-      --user-msg: #4f46e5;
-      --bot-msg: #1f2937;
+      --subtext: #9ca3af;
+      --user-msg: #1e293b;
+      --ai-msg: #111827;
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
     }
-    html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(--text); }
-    body { display: flex; flex-direction: column; max-width: 100%; }
-
-    /* HEADER */
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, sans-serif;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      padding-top: var(--safe-top);
+      padding-bottom: var(--safe-bottom);
+    }
     header {
-      padding: 0.875rem 1rem;
+      padding: 1rem 1.25rem;
       border-bottom: 1px solid rgba(99,102,241,0.2);
       display: flex;
+      justify-content: space-between;
       align-items: center;
-      justify-content: center;
-      gap: 0.75rem;
-      flex-shrink: 0;
     }
-    .logo-wrap {
+    .logo {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--accent);
       display: flex;
       align-items: center;
       gap: 0.5rem;
     }
-    .logo {
-      font-size: 1.25rem;
-      font-weight: 700;
-      color: var(--accent);
-      letter-spacing: 0.5px;
-    }
     .status {
-      font-size: 0.75rem;
-      padding: 0.2rem 0.6rem;
-      border-radius: 999px;
-      background: rgba(16,185,129,0.15);
-      color: #34d399;
+      font-size: 0.85rem;
+      color: #22c55e;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
     }
-
-    /* CHAT AREA */
-    #chat {
+    .status-dot {
+      width: 8px; height: 8px;
+      background: #22c55e;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%,100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+    main {
       flex: 1;
       overflow-y: auto;
       padding: 1rem;
       display: flex;
       flex-direction: column;
-      gap: 0.875rem;
-      scroll-behavior: smooth;
+      gap: 1rem;
     }
-    .msg {
-      max-width: 82%;
-      padding: 0.875rem 1.125rem;
-      border-radius: 1.25rem;
+    .avatar-container {
+      display: flex;
+      justify-content: center;
+      padding: 1rem;
+    }
+    .remy-avatar {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #6366f1, #a855f7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3rem;
+      box-shadow: 0 0 30px rgba(99,102,241,0.3);
+    }
+    .message {
+      max-width: 85%;
+      padding: 0.9rem 1.1rem;
+      border-radius: 1.1rem;
       line-height: 1.5;
-      font-size: 0.95rem;
-      word-wrap: break-word;
+      animation: fadeIn 0.3s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity:0; transform: translateY(8px); }
+      to { opacity:1; transform: translateY(0); }
     }
     .user {
       background: var(--user-msg);
-      color: white;
-      align-self: flex-end;
-      border-bottom-right-radius: 0.375rem;
+      margin-left: auto;
+      border-bottom-right-radius: 0.3rem;
     }
-    .bot {
-      background: var(--bot-msg);
-      align-self: flex-start;
-      border-bottom-left-radius: 0.375rem;
-      border: 1px solid rgba(99,102,241,0.2);
+    .ai {
+      background: var(--ai-msg);
+      margin-right: auto;
+      border-bottom-left-radius: 0.3rem;
+      border-left: 2px solid var(--accent);
     }
-    .typing {
-      align-self: flex-start;
-      padding: 0.875rem 1.25rem;
+    .system {
+      align-self: center;
+      background: var(--accent-soft);
+      color: #a5b4fc;
+      font-size: 0.9rem;
+      padding: 0.6rem 1rem;
+      border-radius: 0.8rem;
     }
-    .dots { display: flex; gap: 0.25rem; }
-    .dot {
-      width: 8px; height: 8px; border-radius: 50%;
-      background: var(--muted);
-      animation: bounce 1.4s infinite ease-in-out both;
-    }
-    .dot:nth-child(1) { animation-delay: -0.32s; }
-    .dot:nth-child(2) { animation-delay: -0.16s; }
-    @keyframes bounce {
-      0%,80%,100% { transform: scale(0.7); opacity: 0.5; }
-      40% { transform: scale(1); opacity: 1; }
-    }
-
-    /* INPUT BAR */
-    .input-bar {
-      padding: 0.75rem 1rem 1rem;
+    .input-area {
+      padding: 1rem 1.25rem;
       border-top: 1px solid rgba(99,102,241,0.2);
       display: flex;
-      gap: 0.5rem;
-      align-items: flex-end;
-      flex-shrink: 0;
+      gap: 0.7rem;
+      align-items: center;
     }
-    #input {
+    textarea {
       flex: 1;
-      padding: 0.875rem 1.125rem;
-      border-radius: 999px;
+      background: rgba(30,41,59,0.6);
       border: 1px solid rgba(99,102,241,0.3);
-      background: var(--surface);
-      color: var(--text);
+      border-radius: 1rem;
+      padding: 0.9rem 1.1rem;
+      color: white;
       font-size: 1rem;
+      resize: none;
+      min-height: 52px;
+      max-height: 120px;
+    }
+    textarea:focus {
       outline: none;
-      transition: all 0.2s;
-    }
-    #input:focus {
       border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(99,102,241,0.2);
+      box-shadow: 0 0 0 2px rgba(99,102,241,0.25);
     }
-    .btn {
-      width: 44px; height: 44px;
+    button {
+      width: 52px;
+      height: 52px;
       border-radius: 50%;
       border: none;
       background: var(--accent);
       color: white;
-      font-size: 1rem;
+      font-size: 1.2rem;
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: transform 0.15s;
+      transition: transform 0.15s, background 0.15s;
       flex-shrink: 0;
     }
-    .btn:active { transform: scale(0.95); }
-    .btn.mic { background: #10b981; }
-    .btn.mic.listening { background: #ef4444; animation: pulse 1s infinite; }
-    @keyframes pulse {
-      0% { box-shadow: 0 0 0 0 rgba(239,68,68,0.4); }
-      70% { box-shadow: 0 0 0 10px rgba(239,68,68,0); }
-      100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); }
+    button:active { transform: scale(0.95); }
+    button.listening { background: #ef4444; }
+    .settings-toggle {
+      background: transparent;
+      width: auto;
+      height: auto;
+      border-radius: 0.5rem;
+      padding: 0.4rem 0.7rem;
+      font-size: 0.8rem;
+      color: var(--subtext);
     }
-
-    /* PROGRESS BAR */
-    .progress-container {
-      height: 3px;
-      background: rgba(99,102,241,0.2);
-      width: 100%;
-      flex-shrink: 0;
+    .settings-panel {
+      background: rgba(17,24,39,0.95);
+      border: 1px solid rgba(99,102,241,0.3);
+      border-radius: 1rem;
+      padding: 1.25rem;
+      margin: 1rem;
       display: none;
     }
-    .progress-bar {
-      height: 100%;
-      width: 0%;
-      background: var(--accent);
-      transition: width 0.3s ease;
+    .settings-panel.open { display: block; }
+    .settings-panel h3 { margin-bottom: 1rem; color: var(--accent); }
+    .settings-panel input {
+      width: 100%;
+      padding: 0.8rem;
+      margin: 0.5rem 0 1rem;
+      background: rgba(30,41,59,0.6);
+      border: 1px solid rgba(99,102,241,0.3);
+      border-radius: 0.6rem;
+      color: white;
+      font-size: 0.95rem;
+    }
+    .settings-note {
+      font-size: 0.8rem;
+      color: var(--subtext);
+      margin-top: -0.5rem;
+      margin-bottom: 1rem;
+    }
+    .save-btn {
+      border-radius: 0.6rem;
+      width: 100%;
+      height: 44px;
+      font-size: 1rem;
     }
   </style>
 </head>
 <body>
+  <header>
+    <div class="logo">✨ Andromeda</div>
+    <div class="status">
+      <span class="status-dot"></span>
+      <span id="status-text">ONLINE</span>
+    </div>
+  </header>
 
-<header>
-  <div class="logo-wrap">
-    <span class="logo">✦ ANDROMEDA</span>
+  <div class="settings-panel" id="settings-panel">
+    <h3>🔐 Provider Settings</h3>
+    <label>Groq API Key</label>
+    <input type="password" id="groq-key-input" placeholder="gsk_xxxxxxxxxxxx">
+    <p class="settings-note">Your key stays in your browser only — never sent to GitHub or any third party.</p>
+    <button class="save-btn" id="save-settings">Save & Connect</button>
   </div>
-  <span class="status">ONLINE</span>
-</header>
 
-<div class="progress-container" id="progressContainer">
-  <div class="progress-bar" id="progressBar"></div>
-</div>
+  <main id="chat-container">
+    <div class="avatar-container">
+      <div class="remy-avatar" id="remy-avatar">👾</div>
+    </div>
+    <div class="message system" id="welcome-msg">
+      Hi! I'm Andromeda — ready to help. 🔮<br><br>
+      <button class="settings-toggle" id="open-settings">⚙️ Set API Key</button> to get started.
+    </div>
+  </main>
 
-<div id="chat"></div>
+  <div class="input-area">
+    <button id="mic-btn" title="Voice Input">🎤</button>
+    <textarea id="user-input" placeholder="Type your message…"></textarea>
+    <button id="send-btn" title="Send">➤</button>
+  </div>
 
-<div class="input-bar">
-  <input type="text" id="input" placeholder="Message Andromeda..." autocomplete="off">
-  <button class="btn mic" id="micBtn" title="Voice Input">🎤</button>
-  <button class="btn" id="sendBtn" title="Send">➤</button>
-</div>
-
-<script>
-// ==========================================
-// 🔑 YOUR GROQ CONFIG — PASTE YOUR KEY BELOW
-// ==========================================
-const CONFIG = {
-  API_KEY: "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",
-  BASE_URL: "https://api.groq.com/openai/v1",
-  MODEL: "qwen/qwen3.8-27b-instruct",
-  WHISPER_MODEL: "whisper-large-v3-turbo",
-  ORPHEUS_MODEL: "canopylabs/orpheus-v1-english",
-  TEMPERATURE: 0.7,
-  MAX_TOKENS: 2048
-};
-
-// ==========================================
-// 🧠 ANDROMEDA CORE — DO NOT EDIT BELOW
-// ==========================================
-const chatEl = document.getElementById('chat');
-const inputEl = document.getElementById('input');
-const sendBtn = document.getElementById('sendBtn');
-const micBtn = document.getElementById('micBtn');
-const progressContainer = document.getElementById('progressContainer');
-const progressBar = document.getElementById('progressBar');
-
-let conversation = [];
-let isListening = false;
-let recognition = null;
-
-// Voice recognition setup
-function initVoice() {
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) {
-    micBtn.style.opacity = '0.3';
-    micBtn.title = 'Voice not supported';
-    return false;
-  }
-  recognition = new SR();
-  recognition.continuous = true;
-  recognition.interimResults = true;
-  recognition.lang = 'en-GB';
-  
-  recognition.onresult = (e) => {
-    let transcript = '';
-    for (let i = e.resultIndex; i < e.results.length; i++) {
-      transcript += e.results[i][0].transcript;
-    }
-    inputEl.value = transcript;
-  };
-  
-  recognition.onend = () => {
-    isListening = false;
-    micBtn.classList.remove('listening');
-  };
-  
-  recognition.onerror = (err) => {
-    console.error('Voice error:', err);
-    stopListening();
-  };
-  
-  return true;
-}
-
-function startListening() {
-  if (!recognition) return;
-  isListening = true;
-  micBtn.classList.add('listening');
-  recognition.start();
-}
-
-function stopListening() {
-  if (!recognition) return;
-  isListening = false;
-  micBtn.classList.remove('listening');
-  recognition.stop();
-}
-
-// Text-to-Speech using Orpheus via Groq
-async function speak(text) {
-  try {
-    const res = await fetch(`${CONFIG.BASE_URL}/audio/speech`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${CONFIG.API_KEY}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: CONFIG.ORPHEUS_MODEL,
-        input: text,
-        voice: 'en-female',
-        response_format: 'mp3'
-      })
-    });
-    
-    if (!res.ok) throw new Error('TTS failed');
-    const blob = await res.blob();
-    const url = URL.createObjectURL(blob);
-    const audio = new Audio(url);
-    audio.play();
-    audio.onended = () => URL.revokeObjectURL(url);
-  } catch (err) {
-    console.warn('Orpheus TTS failed, using browser voice:', err);
-    // Fallback: browser speech synthesis
-    const utter = new SpeechSynthesisUtterance(text);
-    utter.lang = 'en-GB';
-    utter.voice = speechSynthesis.getVoices().find(v => v.lang === 'en-GB' && v.name.includes('Female'));
-    speechSynthesis.speak(utter);
-  }
-}
-
-// Progress bar helpers
-function showProgress(percent) {
-  progressContainer.style.display = 'block';
-  progressBar.style.width = percent + '%';
-}
-function hideProgress() {
-  progressContainer.style.display = 'none';
-  progressBar.style.width = '0%';
-}
-
-// Add message to chat
-function addMessage(text, isUser) {
-  const div = document.createElement('div');
-  div.className = `msg ${isUser ? 'user' : 'bot'}`;
-  div.textContent = text;
-  chatEl.appendChild(div);
-  chatEl.scrollTop = chatEl.scrollHeight;
-  return div;
-}
-
-// Show typing indicator
-function showTyping() {
-  const div = document.createElement('div');
-  div.className = 'msg bot typing';
-  div.id = 'typing';
-  div.innerHTML = '<div class="dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>';
-  chatEl.appendChild(div);
-  chatEl.scrollTop = chatEl.scrollHeight;
-}
-function hideTyping() {
-  const el = document.getElementById('typing');
-  if (el) el.remove();
-}
-
-// Send message to Groq
-async function sendMessage() {
-  const text = inputEl.value.trim();
-  if (!text) return;
-  
-  inputEl.value = '';
-  addMessage(text, true);
-  conversation.push({ role: 'user', content: text });
-  
-  showTyping();
-  showProgress(30);
-  
-  try {
-    const res = await fetch(`${CONFIG.BASE_URL}/chat/completions`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${CONFIG.API_KEY}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: CONFIG.MODEL,
-        messages: conversation,
-        temperature: CONFIG.TEMPERATURE,
-        max_tokens: CONFIG.MAX_TOKENS,
-        stream: false
-      })
-    });
-    
-    showProgress(80);
-    
-    if (!res.ok) throw new Error(`API Error: ${res.status}`);
-    const data = await res.json();
-    const reply = data.choices[0].message.content.trim();
-    
-    hideTyping();
-    showProgress(100);
-    
-    addMessage(reply, false);
-    conversation.push({ role: 'assistant', content: reply });
-    
-    // Speak reply
-    await speak(reply);
-    
-  } catch (err) {
-    hideTyping();
-    addMessage(`⚠️ Error: ${err.message} — check your API key`, false);
-    console.error(err);
-  } finally {
-    setTimeout(hideProgress, 500);
-  }
-}
-
-// Event Listeners
-sendBtn.addEventListener('click', sendMessage);
-inputEl.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault();
-    sendMessage();
-  }
-});
-micBtn.addEventListener('click', () => {
-  if (isListening) stopListening();
-  else startListening();
-});
-
-// Init
-initVoice();
-addMessage("Hi! I'm Andromeda — ready to help. 🚀", false);
-</script>
-
+  <script src="ai-brain.js" type="module"></script>
+  <script src="voice-engine.js" type="module"></script>
 </body>
 </html>
