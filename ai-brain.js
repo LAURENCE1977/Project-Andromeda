@@ -1,45 +1,30 @@
 // ==========================================
-// PROJECT ANDROMEDA — AI BRAIN CORE
-// Free forever • No secrets in repo • v2.0
+// PROJECT ANDROMEDA — AI BRAIN FINAL FIX
+// Direct • Simple • Works on iPhone/iPad
 // ==========================================
 
 export const AI = {
-  config: {
-    provider: null,
-    apiKey: null,
-    baseUrl: "https://api.groq.com/openai/v1",
-    model: "llama-3.1-8b-instant",
-    temperature: 0.7,
-    maxTokens: 2048,
-    memory: []
-  },
+  baseUrl: "https://api.groq.com/openai/v1",
+  model: "llama-3.1-8b-instant",
+  apiKey: null,
+  memory: [],
 
   init() {
-    const savedKey = localStorage.getItem("andromeda_groq_key");
-    if (savedKey) {
-      this.config.apiKey = savedKey;
-      this.config.provider = "groq";
+    const saved = localStorage.getItem("andromeda_key");
+    if (saved) {
+      this.apiKey = saved;
       this.updateStatus("CONNECTED ✅");
     }
-    this.loadMemory();
   },
 
   setKey(key) {
     if (!key || !key.startsWith("gsk_")) {
-      return { ok: false, error: "Invalid key format — must start with gsk_" };
+      return { ok: false, error: "Key must start with gsk_" };
     }
-    this.config.apiKey = key.trim();
-    this.config.provider = "groq";
-    localStorage.setItem("andromeda_groq_key", this.config.apiKey);
+    this.apiKey = key.trim();
+    localStorage.setItem("andromeda_key", this.apiKey);
     this.updateStatus("CONNECTED ✅");
     return { ok: true };
-  },
-
-  clearKey() {
-    localStorage.removeItem("andromeda_groq_key");
-    this.config.apiKey = null;
-    this.config.provider = null;
-    this.updateStatus("OFFLINE");
   },
 
   updateStatus(text) {
@@ -47,85 +32,59 @@ export const AI = {
     if (el) el.textContent = text;
   },
 
-  async sendMessage(userText) {
-    if (!this.config.apiKey) {
-      return {
-        ok: false,
-        error: "🔐 Please set your Groq API key first — tap ⚙️ above"
-      };
+  async chat(message) {
+    if (!this.apiKey) {
+      return { ok: false, error: "🔐 Tap 'Set API Key' first" };
     }
 
-    this.addToMemory("user", userText);
-
-    const messages = [
-      { role: "system", content: "You are Andromeda — warm, helpful, concise, friendly. Speak naturally." },
-      ...this.config.memory.slice(-10)
-    ];
+    this.memory.push({ role: "user", content: message });
 
     try {
-      const res = await fetch(`${this.config.baseUrl}/chat/completions`, {
+      const response = await fetch(`${this.baseUrl}/chat/completions`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${this.config.apiKey}`
+          "Authorization": "Bearer " + this.apiKey
         },
         body: JSON.stringify({
-          model: this.config.model,
-          messages,
-          temperature: this.config.temperature,
-          max_tokens: this.config.maxTokens
+          model: this.model,
+          messages: [
+            { role: "system", content: "You are Andromeda — warm, friendly, concise, speak naturally." },
+            ...this.memory.slice(-8)
+          ],
+          temperature: 0.7
         })
       });
 
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        return {
-          ok: false,
-          error: `API Error ${res.status} — ${err.error?.message || "Check your key"}`
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.log("GROQ ERROR", response.status, errorText);
+        return { 
+          ok: false, 
+          error: `Groq Error ${response.status} — check key at console.groq.com/keys` 
         };
       }
 
-      const data = await res.json();
+      const data = await response.json();
       const reply = data.choices[0].message.content.trim();
-      this.addToMemory("assistant", reply);
+      this.memory.push({ role: "assistant", content: reply });
       return { ok: true, reply };
 
     } catch (err) {
-      return { ok: false, error: `Network error: ${err.message}` };
+      console.log("FETCH FAILED:", err);
+      return { ok: false, error: `Cannot connect: ${err.message}` };
     }
-  },
-
-  addToMemory(role, content) {
-    this.config.memory.push({ role, content });
-    this.saveMemory();
-  },
-
-  saveMemory() {
-    localStorage.setItem("andromeda_memory", JSON.stringify(this.config.memory));
-  },
-
-  loadMemory() {
-    const saved = localStorage.getItem("andromeda_memory");
-    if (saved) {
-      try { this.config.memory = JSON.parse(saved); }
-      catch { this.config.memory = []; }
-    }
-  },
-
-  clearMemory() {
-    this.config.memory = [];
-    localStorage.removeItem("andromeda_memory");
   }
 };
 
-// UI BINDINGS
+// ========== UI CONNECTIONS ==========
 document.addEventListener("DOMContentLoaded", () => {
   AI.init();
 
-  const chat = document.getElementById("chat-container");
+  const chatBox = document.getElementById("chat-container");
   const input = document.getElementById("user-input");
   const sendBtn = document.getElementById("send-btn");
-  const openSettings = document.getElementById("open-settings");
+  const settingsToggle = document.getElementById("open-settings");
   const settingsPanel = document.getElementById("settings-panel");
   const keyInput = document.getElementById("groq-key-input");
   const saveBtn = document.getElementById("save-settings");
@@ -134,19 +93,19 @@ document.addEventListener("DOMContentLoaded", () => {
     const div = document.createElement("div");
     div.className = `message ${type}`;
     div.textContent = text;
-    chat.appendChild(div);
-    chat.scrollTop = chat.scrollHeight;
-    return div;
+    chatBox.appendChild(div);
+    chatBox.scrollTop = chatBox.scrollHeight;
   }
 
-  openSettings?.addEventListener("click", () => {
+  // Settings panel
+  settingsToggle?.addEventListener("click", () => {
     settingsPanel.classList.toggle("open");
   });
 
   saveBtn?.addEventListener("click", () => {
     const result = AI.setKey(keyInput.value.trim());
     if (result.ok) {
-      addMessage("✅ Key saved! Ready to chat — ask me anything!", "system");
+      addMessage("✅ Key saved! Let's chat — say hello!", "system");
       settingsPanel.classList.remove("open");
       keyInput.value = "";
     } else {
@@ -154,29 +113,29 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  async function handleSend() {
+  // Send message
+  async function sendMessage() {
     const text = input.value.trim();
     if (!text) return;
-    
+
     addMessage(text, "user");
     input.value = "";
-    
-    const result = await AI.sendMessage(text);
+
+    const result = await AI.chat(text);
     
     if (result.ok) {
       addMessage(result.reply, "ai");
-      // Trigger voice
-      window.speakText?.(result.reply);
+      if (window.speakText) window.speakText(result.reply);
     } else {
       addMessage(`⚠️ ${result.error}`, "system");
     }
   }
 
-  sendBtn.addEventListener("click", handleSend);
+  sendBtn.addEventListener("click", sendMessage);
   input.addEventListener("keydown", (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      handleSend();
+      sendMessage();
     }
   });
 });
